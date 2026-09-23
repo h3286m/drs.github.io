@@ -44,7 +44,7 @@
             <!-- タブ切り替え -->
             <div class="flex items-center bg-indigo-950 p-1 rounded-lg">
                 <button onclick="switchTab('run')" id="tab-run" class="px-3 py-1 rounded text-xs font-bold bg-indigo-600 text-white transition">📋 ランシート</button>
-                <button onclick="switchTab('bus')" id="tab-bus" class="px-3 py-1 rounded text-xs font-bold text-indigo-300 hover:text-white transition">🚌 バス輸送一覧</button>
+                <button onclick="switchTab('bus')" id="tab-bus" class="px-3 py-1 rounded text-xs font-bold text-indigo-300 hover:text-white transition">🚌 バス輸送一覧[cite: 1]</button>
             </div>
             
             <div class="flex items-center gap-3">
@@ -86,6 +86,20 @@
     </footer>
 
     <script>
+        // 国コードマッピング（必要に応じて後から変更・追加可能）
+        const countryMap = {
+            "001": "🇯🇵 日本",
+            "002": "🇹🇭 タイ",
+            "003": "🇰🇷 韓国",
+            "004": "🌏 代表チーム4",
+            "005": "🌏 代表チーム5",
+            "006": "🌏 代表チーム6",
+            "007": "🌏 代表チーム7"
+        };
+
+        // 場所の選択肢リスト
+        const locationOptions = ["-", "乗車エリア", "メインプール", "サブプール", "控室", "本部席", "VCC", "エントランス", "観客席"];
+
         // --- ランシートデータ (9/24〜9/28) ---
         const standardSchedule = [
             { id: 1, start: "08:00", end: "08:00", dept: "VEM", activity: "VGM・DVGM・VEM・FAM･SVM チェックイン", activityEn: "VGM・DVGM・VEM・FAM Check IN", note: "-" },
@@ -106,7 +120,7 @@
             { id: 16, start: "14:30", end: "14:30", dept: "VEM", activity: "VEM-VCC① VEM-CCC① VEM-ACP① チェックアウト", activityEn: "VEM-VCC① VEM-CCC① VEM-ACP① Check out", note: "-" },
             { id: 17, start: "18:00", end: "18:00", dept: "VEM", activity: "VEM-VCC② VEM-CCC② チェックアウト", activityEn: "VEM-VCC② VEM-CCC② Check out", note: "-" },
             { id: 18, start: "18:00", end: "18:00", dept: "SPT", activity: "公式練習終了", activityEn: "Official Training Ends", note: "-" },
-            { id: 19, start: "18:30", end: "18:30", dept: "TRA/SPT", activity: "選手会場出発（会場発最終便）", activityEn: "Athlete bus Departure (Final departure)", note: "Boarding area" },
+            { id: 19, start: "18:30", end: "18:30", dept: "TRA/SPT", activity: "選手会場出発（会場発最終便）", activityEn: "Athlete bus Departure (Final departure)", note: "乗車エリア" },
             { id: 20, start: "19:30", end: "19:30", dept: "VEM", activity: "VEM-VCC③ VEM-CCC③ チェックアウト", activityEn: "VEM-VCC③ VEM-CCC③ Check out", note: "-" },
             { id: 21, start: "19:30", end: "22:00", dept: "VEM", activity: "VOC・VCC クローズ", activityEn: "VOC・VCC Close", note: "-" },
             { id: 22, start: "19:30", end: "20:00", dept: "VEM", activity: "施錠", activityEn: "Key Rock", note: "-" },
@@ -138,7 +152,7 @@
             { id: 21, start: "17:00", end: "18:30", dept: "SPT", activity: "SWA02 Mixed Team - Acrobatic Routine", activityEn: "SWA02 START - ZERO TIME", note: "セッション2" },
             { id: 22, start: "18:30", end: "18:30", dept: "SPT", activity: "SWA02 終了", activityEn: "SWA02 END", note: "-" },
             { id: 23, start: "18:00", end: "18:00", dept: "VEM", activity: "VEM-VCC② VEM-CCC② ボランティアチェックアウト", activityEn: "VEM-VCC② VEM-CCC② Check out", note: "-" },
-            { id: 24, start: "19:00", end: "19:00", dept: "TRA/SPT", activity: "選手会場出発（会場発最終便）", activityEn: "Athlete bus Departure (Final)", note: "Boarding area" },
+            { id: 24, start: "19:00", end: "19:00", dept: "TRA/SPT", activity: "選手会場出発（会場発最終便）", activityEn: "Athlete bus Departure (Final)", note: "乗車エリア" },
             { id: 25, start: "21:30", end: "21:30", dept: "VEM", activity: "VEM-VCC③ VEM-CCC③ VEM-ACP② ボランティアチェックアウト", activityEn: "VEM-VCC③VEM-CCC③VEM-ACP② Check out", note: "-" },
             { id: 26, start: "21:30", end: "21:30", dept: "VEM", activity: "VOC・VCC クローズ", activityEn: "VOC・VCC Close", note: "-" },
             { id: 27, start: "21:30", end: "22:00", dept: "VEM", activity: "施錠", activityEn: "Key Rock", note: "-" },
@@ -157,98 +171,98 @@
             "2026-09-28": schedule928
         };
 
-        // --- バス輸送スケジュールデータ (PDFより抽出) ---
+        // --- バス輸送スケジュールデータ (国名対応版) ---
         const busData = {
             "2026-09-24": [
-                { id: 101, start: "09:15", end: "11:35", type: "TA", code: "TA0924SWA001", target: "選手", desc: "水泳(アーティスティックスイミング) 様" },
-                { id: 102, start: "10:15", end: "11:20", type: "TA", code: "TA0924SWA002", target: "選手", desc: "水泳(アーティスティックスイミング) 様" },
-                { id: 103, start: "10:45", end: "12:20", type: "TA", code: "TA0924SWA003", target: "選手", desc: "水泳(アーティスティックスイミング) 様" },
-                { id: 104, start: "12:00", end: "12:50", type: "TA", code: "TA0924SWA004", target: "選手", desc: "水泳(アーティスティックスイミング) 様" },
-                { id: 105, start: "13:00", end: "14:05", type: "TA", code: "TA0924SWA005", target: "選手", desc: "水泳(アーティスティックスイミング) 様" },
-                { id: 106, start: "14:20", end: "15:05", type: "TA", code: "TA0924SWA003", target: "選手", desc: "水泳(アーティスティックスイミング) 様" },
-                { id: 107, start: "14:30", end: "15:00", type: "TA", code: "TA0924SWA001", target: "選手", desc: "水泳(アーティスティックスイミング) 様" },
-                { id: 108, start: "14:50", end: "16:05", type: "TA", code: "TA0924SWA004", target: "選手", desc: "水泳(アーティスティックスイミング) 様" },
-                { id: 109, start: "16:00", end: "18:05", type: "TA", code: "TA0924SWA006", target: "選手", desc: "水泳(アーティスティックスイミング) 様" },
-                { id: 110, start: "16:05", end: "17:05", type: "TA", code: "TA0924SWA005", target: "選手", desc: "水泳(アーティスティックスイミング) 様" },
-                { id: 111, start: "19:10", end: "20:00", type: "TW", code: "TFTMTW0924SWAW04", target: "スタッフ/職員", desc: "水泳(アーティスティックスイミング) 様" },
-                { id: 112, start: "19:15", end: "20:10", type: "TF", code: "TFTMTW0924SWAF04", target: "審判等", desc: "水泳(アーティスティックスイミング) 様" }
+                { id: 101, start: "09:15", end: "11:35", type: "TA", code: "TA0924SWA001", target: "選手" },
+                { id: 102, start: "10:15", end: "11:20", type: "TA", code: "TA0924SWA002", target: "選手" },
+                { id: 103, start: "10:45", end: "12:20", type: "TA", code: "TA0924SWA003", target: "選手" },
+                { id: 104, start: "12:00", end: "12:50", type: "TA", code: "TA0924SWA004", target: "選手" },
+                { id: 105, start: "13:00", end: "14:05", type: "TA", code: "TA0924SWA005", target: "選手" },
+                { id: 106, start: "14:20", end: "15:05", type: "TA", code: "TA0924SWA003", target: "選手" },
+                { id: 107, start: "14:30", end: "15:00", type: "TA", code: "TA0924SWA001", target: "選手" },
+                { id: 108, start: "14:50", end: "16:05", type: "TA", code: "TA0924SWA004", target: "選手" },
+                { id: 109, start: "16:00", end: "18:05", type: "TA", code: "TA0924SWA006", target: "選手" },
+                { id: 110, start: "16:05", end: "17:05", type: "TA", code: "TA0924SWA005", target: "選手" },
+                { id: 111, start: "19:10", end: "20:00", type: "TW", code: "TFTMTW0924SWAW04", target: "スタッフ/職員" },
+                { id: 112, start: "19:15", end: "20:10", type: "TF", code: "TFTMTW0924SWAF04", target: "審判等" }
             ],
             "2026-09-25": [
-                { id: 201, start: "09:15", end: "11:35", type: "TA", code: "TA0925SWA001", target: "選手", desc: "水泳(アーティスティックスイミング) 様" },
-                { id: 202, start: "09:45", end: "11:25", type: "TF", code: "TFTMTW0925SWAF04", target: "審判等", desc: "水泳(アーティスティックスイミング) 様" },
-                { id: 203, start: "10:15", end: "11:20", type: "TA", code: "TA0925SWA002", target: "選手", desc: "水泳(アーティスティックスイミング) 様" },
-                { id: 204, start: "10:45", end: "12:20", type: "TA", code: "TA0925SWA003", target: "選手", desc: "水泳(アーティスティックスイミング) 様" },
-                { id: 205, start: "12:00", end: "12:50", type: "TA", code: "TA0925SWA004", target: "選手", desc: "水泳(アーティスティックスイミング) 様" },
-                { id: 206, start: "13:00", end: "14:05", type: "TA", code: "TA0925SWA005", target: "選手", desc: "水泳(アーティスティックスイミング) 様" },
-                { id: 207, start: "13:00", end: "18:25", type: "TF", code: "TFTMTW0925SWAF02", target: "審判等", desc: "水泳(アーティスティックスイミング) 様" },
-                { id: 208, start: "14:20", end: "15:05", type: "TA", code: "TA0925SWA003", target: "選手", desc: "水泳(アーティスティックスイミング) 様" },
-                { id: 209, start: "14:30", end: "15:00", type: "TA", code: "TA0925SWA001", target: "選手", desc: "水泳(アーティスティックスイミング) 様" },
-                { id: 210, start: "14:50", end: "16:05", type: "TA", code: "TA0925SWA004", target: "選手", desc: "水泳(アーティスティックスイミング) 様" },
-                { id: 211, start: "15:00", end: "19:25", type: "TF", code: "TFTMTW0925SWAF05", target: "審判等", desc: "水泳(アーティスティックスイミング) 様" },
-                { id: 212, start: "16:00", end: "18:05", type: "TA", code: "TA0925SWA006", target: "選手", desc: "水泳(アーティスティックスイミング) 様" },
-                { id: 213, start: "16:05", end: "17:05", type: "TA", code: "TA0925SWA005", target: "選手", desc: "水泳(アーティスティックスイミング) 様" },
-                { id: 214, start: "18:45", end: "20:00", type: "TW", code: "TFTMTW0925SWAW05", target: "スタッフ/職員", desc: "水泳(アーティスティックスイミング) 様" },
-                { id: 215, start: "19:10", end: "20:00", type: "TW", code: "TFTMTW0925SWAW04", target: "スタッフ/職員", desc: "水泳(アーティスティックスイミング) 様" },
-                { id: 216, start: "19:45", end: "20:10", type: "TF", code: "TFTMTW0925SWAF02", target: "審判等", desc: "水泳(アーティスティックスイミング) 様" }
+                { id: 201, start: "09:15", end: "11:35", type: "TA", code: "TA0925SWA001", target: "選手" },
+                { id: 202, start: "09:45", end: "11:25", type: "TF", code: "TFTMTW0925SWAF04", target: "審判等" },
+                { id: 203, start: "10:15", end: "11:20", type: "TA", code: "TA0925SWA002", target: "選手" },
+                { id: 204, start: "10:45", end: "12:20", type: "TA", code: "TA0925SWA003", target: "選手" },
+                { id: 205, start: "12:00", end: "12:50", type: "TA", code: "TA0925SWA004", target: "選手" },
+                { id: 206, start: "13:00", end: "14:05", type: "TA", code: "TA0925SWA005", target: "選手" },
+                { id: 207, start: "13:00", end: "18:25", type: "TF", code: "TFTMTW0925SWAF02", target: "審判等" },
+                { id: 208, start: "14:20", end: "15:05", type: "TA", code: "TA0925SWA003", target: "選手" },
+                { id: 209, start: "14:30", end: "15:00", type: "TA", code: "TA0925SWA001", target: "選手" },
+                { id: 210, start: "14:50", end: "16:05", type: "TA", code: "TA0925SWA004", target: "選手" },
+                { id: 211, start: "15:00", end: "19:25", type: "TF", code: "TFTMTW0925SWAF05", target: "審判等" },
+                { id: 212, start: "16:00", end: "18:05", type: "TA", code: "TA0925SWA006", target: "選手" },
+                { id: 213, start: "16:05", end: "17:05", type: "TA", code: "TA0925SWA005", target: "選手" },
+                { id: 214, start: "18:45", end: "20:00", type: "TW", code: "TFTMTW0925SWAW05", target: "スタッフ/職員" },
+                { id: 215, start: "19:10", end: "20:00", type: "TW", code: "TFTMTW0925SWAW04", target: "スタッフ/職員" },
+                { id: 216, start: "19:45", end: "20:10", type: "TF", code: "TFTMTW0925SWAF02", target: "審判等" }
             ],
             "2026-09-26": [
-                { id: 301, start: "06:30", end: "09:00", type: "TF/TW", code: "TFTMTW0926SWAM01", target: "審判/スタッフ", desc: "水泳(アーティスティックスイミング) 様" },
-                { id: 302, start: "08:50", end: "14:00", type: "TW", code: "TFTMTW0926SWAW03", target: "スタッフ/職員", desc: "水泳(アーティスティックスイミング) 様" },
-                { id: 303, start: "08:50", end: "14:55", type: "TW", code: "TFTMTW0926SWAW02", target: "スタッフ/職員", desc: "水泳(アーティスティックスイミング) 様" },
-                { id: 304, start: "09:00", end: "13:55", type: "TF", code: "TFTMTW0926SWAF05", target: "審判等", desc: "水泳(アーティスティックスイミング) 様" },
-                { id: 305, start: "09:15", end: "10:15", type: "TA", code: "TA0926SWA003", target: "選手", desc: "水泳(アーティスティックスイミング) 様" },
-                { id: 306, start: "09:15", end: "12:55", type: "TF", code: "TFTMTW0926SWAF03", target: "審判等", desc: "水泳(アーティスティックスイミング) 様" },
-                { id: 307, start: "09:45", end: "12:25", type: "TF", code: "TFTMTW0926SWAF01", target: "審判等", desc: "水泳(アーティスティックスイミング) 様" },
-                { id: 308, start: "10:15", end: "10:35", type: "TA", code: "TA0926SWA005", target: "選手", desc: "水泳(アーティスティックスイミング) 様" },
-                { id: 309, start: "11:15", end: "12:35", type: "TA", code: "TA0926SWA007", target: "選手", desc: "水泳(アーティスティックスイミング) 様" },
-                { id: 310, start: "13:15", end: "13:35", type: "TA", code: "TA0926SWA002", target: "選手", desc: "水泳(アーティスティックスイミング) 様" },
-                { id: 311, start: "14:15", end: "14:35", type: "TA", code: "TA0926SWA006", target: "選手", desc: "水泳(アーティスティックスイミング) 様" },
-                { id: 312, start: "15:15", end: "16:35", type: "TA", code: "TA0926SWA005", target: "選手", desc: "水泳(アーティスティックスイミング) 様" },
-                { id: 313, start: "16:00", end: "19:55", type: "TF", code: "TFTMTW0926SWAM03", target: "審判等", desc: "水泳(アーティスティックスイミング) 様" },
-                { id: 314, start: "16:15", end: "18:05", type: "TA", code: "TA0926SWA002", target: "選手", desc: "水泳(アーティスティックスイミング) 様" },
-                { id: 315, start: "16:35", end: "18:35", type: "TA", code: "TA0926SWA006", target: "選手", desc: "水泳(アーティスティックスイミング) 様" },
-                { id: 316, start: "17:15", end: "17:35", type: "TA", code: "TA0926SWA007", target: "選手", desc: "水泳(アーティスティックスイミング) 様" },
-                { id: 317, start: "18:15", end: "19:05", type: "TA", code: "TA0926SWA004", target: "選手", desc: "水泳(アーティスティックスイミング) 様" },
-                { id: 318, start: "19:00", end: "20:25", type: "TW", code: "TFTMTW0926SWAW01", target: "スタッフ/職員", desc: "水泳(アーティスティックスイミング) 様" },
-                { id: 319, start: "19:55", end: "20:00", type: "TF", code: "TFTMTW0926SWAM04", target: "審判等", desc: "水泳(アーティスティックスイミング) 様" },
-                { id: 320, start: "20:25", end: "22:00", type: "TW", code: "TFTMTW0926SWAW01", target: "スタッフ/職員", desc: "水泳(アーティスティックスイミング) 様" },
-                { id: 321, start: "20:55", end: "22:00", type: "TF", code: "TFTMTW0926SWAM04", target: "審判等", desc: "水泳(アーティスティックスイミング) 様" }
+                { id: 301, start: "06:30", end: "09:00", type: "TF/TW", code: "TFTMTW0926SWAM01", target: "審判/スタッフ" },
+                { id: 302, start: "08:50", end: "14:00", type: "TW", code: "TFTMTW0926SWAW03", target: "スタッフ/職員" },
+                { id: 303, start: "08:50", end: "14:55", type: "TW", code: "TFTMTW0926SWAW02", target: "スタッフ/職員" },
+                { id: 304, start: "09:00", end: "13:55", type: "TF", code: "TFTMTW0926SWAF05", target: "審判等" },
+                { id: 305, start: "09:15", end: "10:15", type: "TA", code: "TA0926SWA003", target: "選手" },
+                { id: 306, start: "09:15", end: "12:55", type: "TF", code: "TFTMTW0926SWAF03", target: "審判等" },
+                { id: 307, start: "09:45", end: "12:25", type: "TF", code: "TFTMTW0926SWAF01", target: "審判等" },
+                { id: 308, start: "10:15", end: "10:35", type: "TA", code: "TA0926SWA005", target: "選手" },
+                { id: 309, start: "11:15", end: "12:35", type: "TA", code: "TA0926SWA007", target: "選手" },
+                { id: 310, start: "13:15", end: "13:35", type: "TA", code: "TA0926SWA002", target: "選手" },
+                { id: 311, start: "14:15", end: "14:35", type: "TA", code: "TA0926SWA006", target: "選手" },
+                { id: 312, start: "15:15", end: "16:35", type: "TA", code: "TA0926SWA005", target: "選手" },
+                { id: 313, start: "16:00", end: "19:55", type: "TF", code: "TFTMTW0926SWAM03", target: "審判等" },
+                { id: 314, start: "16:15", end: "18:05", type: "TA", code: "TA0926SWA002", target: "選手" },
+                { id: 315, start: "16:35", end: "18:35", type: "TA", code: "TA0926SWA006", target: "選手" },
+                { id: 316, start: "17:15", end: "17:35", type: "TA", code: "TA0926SWA007", target: "選手" },
+                { id: 317, start: "18:15", end: "19:05", type: "TA", code: "TA0926SWA004", target: "選手" },
+                { id: 318, start: "19:00", end: "20:25", type: "TW", code: "TFTMTW0926SWAW01", target: "スタッフ/職員" },
+                { id: 319, start: "19:55", end: "20:00", type: "TF", code: "TFTMTW0926SWAM04", target: "審判等" },
+                { id: 320, start: "20:25", end: "22:00", type: "TW", code: "TFTMTW0926SWAW01", target: "スタッフ/職員" },
+                { id: 321, start: "20:55", end: "22:00", type: "TF", code: "TFTMTW0926SWAM04", target: "審判等" }
             ],
             "2026-09-27": [
-                { id: 401, start: "07:30", end: "08:25", type: "TF", code: "TFTMTW0927SWAF01", target: "審判等", desc: "水泳(アーティスティックスイミング) 様" },
-                { id: 402, start: "07:40", end: "13:25", type: "TF", code: "TFTMTW0927SWAF03", target: "審判等", desc: "水泳(アーティスティックスイミング) 様" },
-                { id: 403, start: "09:15", end: "14:25", type: "TF", code: "TFTMTW0927SWAF05", target: "審判等", desc: "水泳(アーティスティックスイミング) 様" },
-                { id: 404, start: "09:15", end: "10:15", type: "TA", code: "TA0927SWA003", target: "選手", desc: "水泳(アーティスティックスイミング) 様" },
-                { id: 405, start: "09:45", end: "12:25", type: "TF", code: "TFTMTW0927SWAF01", target: "審判等", desc: "水泳(アーティスティックスイミング) 様" },
-                { id: 406, start: "10:00", end: "14:05", type: "TF", code: "TFTMTW0927SWAM01", target: "審判等", desc: "水泳(アーティスティックスイミング) 様" },
-                { id: 407, start: "10:15", end: "10:35", type: "TA", code: "TA0927SWA005", target: "選手", desc: "水泳(アーティスティックスイミング) 様" },
-                { id: 408, start: "11:15", end: "12:35", type: "TA", code: "TA0927SWA007", target: "選手", desc: "水泳(アーティスティックスイミング) 様" },
-                { id: 409, start: "13:15", end: "13:35", type: "TA", code: "TA0927SWA002", target: "選手", desc: "水泳(アーティスティックスイミング) 様" },
-                { id: 410, start: "14:15", end: "14:35", type: "TA", code: "TA0927SWA006", target: "選手", desc: "水泳(アーティスティックスイミング) 様" },
-                { id: 411, start: "15:15", end: "16:35", type: "TA", code: "TA0927SWA005", target: "選手", desc: "水泳(アーティスティックスイミング) 様" },
-                { id: 412, start: "15:25", end: "18:00", type: "TF", code: "TFTMTW0927SWAF04", target: "審判等", desc: "水泳(アーティスティックスイミング) 様" },
-                { id: 413, start: "16:15", end: "18:05", type: "TA", code: "TA0927SWA002", target: "選手", desc: "水泳(アーティスティックスイミング) 様" },
-                { id: 414, start: "16:25", end: "20:55", type: "TF", code: "TFTMTW0927SWAM02", target: "審判等", desc: "水泳(アーティスティックスイミング) 様" },
-                { id: 415, start: "16:35", end: "18:35", type: "TA", code: "TA0927SWA006", target: "選手", desc: "水泳(アーティスティックスイミング) 様" },
-                { id: 416, start: "17:15", end: "17:35", type: "TA", code: "TA0927SWA007", target: "選手", desc: "水泳(アーティスティックスイミング) 様" },
-                { id: 417, start: "18:15", end: "19:05", type: "TA", code: "TA0927SWA004", target: "選手", desc: "水泳(アーティスティックスイミング) 様" },
-                { id: 418, start: "19:00", end: "19:10", type: "TF", code: "TFTMTW0927SWAF04", target: "審判等", desc: "水泳(アーティスティックスイミング) 様" },
-                { id: 419, start: "19:55", end: "20:00", type: "TF", code: "TFTMTW0927SWAM03", target: "審判等", desc: "水泳(アーティスティックスイミング) 様" },
-                { id: 420, start: "20:30", end: "22:00", type: "TF", code: "TFTMTW0927SWAF04", target: "審判等", desc: "水泳(アーティスティックスイミング) 様" },
-                { id: 421, start: "20:55", end: "22:00", type: "TW", code: "TFTMTW0927SWAW04", target: "スタッフ/職員", desc: "水泳(アーティスティックスイミング) 様" }
+                { id: 401, start: "07:30", end: "08:25", type: "TF", code: "TFTMTW0927SWAF01", target: "審判等" },
+                { id: 402, start: "07:40", end: "13:25", type: "TF", code: "TFTMTW0927SWAF03", target: "審判等" },
+                { id: 403, start: "09:15", end: "14:25", type: "TF", code: "TFTMTW0927SWAF05", target: "審判等" },
+                { id: 404, start: "09:15", end: "10:15", type: "TA", code: "TA0927SWA003", target: "選手" },
+                { id: 405, start: "09:45", end: "12:25", type: "TF", code: "TFTMTW0927SWAF01", target: "審判等" },
+                { id: 406, start: "10:00", end: "14:05", type: "TF", code: "TFTMTW0927SWAM01", target: "審判等" },
+                { id: 407, start: "10:15", end: "10:35", type: "TA", code: "TA0927SWA005", target: "選手" },
+                { id: 408, start: "11:15", end: "12:35", type: "TA", code: "TA0927SWA007", target: "選手" },
+                { id: 409, start: "13:15", end: "13:35", type: "TA", code: "TA0927SWA002", target: "選手" },
+                { id: 410, start: "14:15", end: "14:35", type: "TA", code: "TA0927SWA006", target: "選手" },
+                { id: 411, start: "15:15", end: "16:35", type: "TA", code: "TA0927SWA005", target: "選手" },
+                { id: 412, start: "15:25", end: "18:00", type: "TF", code: "TFTMTW0927SWAF04", target: "審判等" },
+                { id: 413, start: "16:15", end: "18:05", type: "TA", code: "TA0927SWA002", target: "選手" },
+                { id: 414, start: "16:25", end: "20:55", type: "TF", code: "TFTMTW0927SWAM02", target: "審判等" },
+                { id: 415, start: "16:35", end: "18:35", type: "TA", code: "TA0927SWA006", target: "選手" },
+                { id: 416, start: "17:15", end: "17:35", type: "TA", code: "TA0927SWA007", target: "選手" },
+                { id: 417, start: "18:15", end: "19:05", type: "TA", code: "TA0927SWA004", target: "選手" },
+                { id: 418, start: "19:00", end: "19:10", type: "TF", code: "TFTMTW0927SWAF04", target: "審判等" },
+                { id: 419, start: "19:55", end: "20:00", type: "TF", code: "TFTMTW0927SWAM03", target: "審判等" },
+                { id: 420, start: "20:30", end: "22:00", type: "TF", code: "TFTMTW0927SWAF04", target: "審判等" },
+                { id: 421, start: "20:55", end: "22:00", type: "TW", code: "TFTMTW0927SWAW04", target: "スタッフ/職員" }
             ],
             "2026-09-28": [
-                { id: 501, start: "07:40", end: "08:40", type: "TF", code: "TFTMTW0928SWAM02", target: "審判等", desc: "水泳(アーティスティックスイミング) 様" },
-                { id: 502, start: "08:15", end: "11:50", type: "TA", code: "TA0928SWA001", target: "選手", desc: "水泳(アーティスティックスイミング) 様" },
-                { id: 503, start: "09:00", end: "14:25", type: "TF", code: "TFTMTW0928SWAM01", target: "審判等", desc: "水泳(アーティスティックスイミング) 様" },
-                { id: 504, start: "09:15", end: "12:40", type: "TF", code: "TFTMTW0928SWAF01", target: "審判等", desc: "水泳(アーティスティックスイミング) 様" },
-                { id: 505, start: "09:15", end: "12:50", type: "TA", code: "TA0928SWA002", target: "選手", desc: "水泳(アーティスティックスイミング) 様" },
-                { id: 506, start: "10:00", end: "13:25", type: "TF", code: "TFTMTW0928SWAM02", target: "審判等", desc: "水泳(アーティスティックスイミング) 様" },
-                { id: 507, start: "10:15", end: "13:50", type: "TA", code: "TA0928SWA003", target: "選手", desc: "水泳(アーティスティックスイミング) 様" },
-                { id: 508, start: "11:15", end: "14:20", type: "TA", code: "TA0928SWA004", target: "選手", desc: "水泳(アーティスティックスイミング) 様" },
-                { id: 509, start: "14:00", end: "14:25", type: "TF", code: "TFTMTW0928SWAF01", target: "審判等", desc: "水泳(アーティスティックスイミング) 様" },
-                { id: 510, start: "14:35", end: "15:25", type: "TF", code: "TFTMTW0928SWAM02", target: "審判等", desc: "水泳(アーティスティックスイミング) 様" },
-                { id: 511, start: "17:20", end: "17:30", type: "TW", code: "TFTMTW0928SWAW03", target: "スタッフ/職員", desc: "水泳(アーティスティックスイミング) 様" }
+                { id: 501, start: "07:40", end: "08:40", type: "TF", code: "TFTMTW0928SWAM02", target: "審判等" },
+                { id: 502, start: "08:15", end: "11:50", type: "TA", code: "TA0928SWA001", target: "選手" },
+                { id: 503, start: "09:00", end: "14:25", type: "TF", code: "TFTMTW0928SWAM01", target: "審判等" },
+                { id: 504, start: "09:15", end: "12:40", type: "TF", code: "TFTMTW0928SWAF01", target: "審判等" },
+                { id: 505, start: "09:15", end: "12:50", type: "TA", code: "TA0928SWA002", target: "選手" },
+                { id: 506, start: "10:00", end: "13:25", type: "TF", code: "TFTMTW0928SWAM02", target: "審判等" },
+                { id: 507, start: "10:15", end: "13:50", type: "TA", code: "TA0928SWA003", target: "選手" },
+                { id: 508, start: "11:15", end: "14:20", type: "TA", code: "TA0928SWA004", target: "選手" },
+                { id: 509, start: "14:00", end: "14:25", type: "TF", code: "TFTMTW0928SWAF01", target: "審判等" },
+                { id: 510, start: "14:35", end: "15:25", type: "TF", code: "TFTMTW0928SWAM02", target: "審判等" },
+                { id: 511, start: "17:20", end: "17:30", type: "TW", code: "TFTMTW0928SWAW03", target: "スタッフ/職員" }
             ]
         };
 
@@ -261,10 +275,10 @@
         ];
 
         let currentIndex = 0;
-        let currentTab = 'run'; // 'run' or 'bus'
+        let currentTab = 'run';
         let currentDeptFilter = 'ALL';
-        let userEdits = JSON.parse(localStorage.getItem('hsc_edits_v10') || '{}');
-        let userChecks = JSON.parse(localStorage.getItem('hsc_checks_v10') || '{}');
+        let userEdits = JSON.parse(localStorage.getItem('hsc_edits_v12') || '{}');
+        let userChecks = JSON.parse(localStorage.getItem('hsc_checks_v12') || '{}');
         let alertedTasks = new Set();
 
         function init() {
@@ -350,6 +364,7 @@
                 const editKey = `${targetDate}_run_${item.id}`;
                 const startTime = userEdits[editKey]?.start || item.start;
                 const endTime = userEdits[editKey]?.end || item.end;
+                const noteVal = userEdits[editKey]?.note !== undefined ? userEdits[editKey].note : item.note;
                 const isChecked = userChecks[editKey] || false;
                 if(isChecked) completedCount++;
 
@@ -376,6 +391,8 @@
                     statusBadge = `<span class="px-2 py-0.5 text-[10px] font-bold rounded bg-emerald-600 text-white animate-pulse">進行中</span>`;
                 }
 
+                let locationOptionsHtml = locationOptions.map(opt => `<option value="${opt}" ${noteVal === opt ? 'selected' : ''}>${opt}</option>`).join('');
+
                 const card = document.createElement('div');
                 card.className = `p-3.5 sm:p-4 rounded-xl border transition flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${cardClass}`;
                 
@@ -387,17 +404,20 @@
                                 <span class="px-2 py-0.5 text-[11px] font-bold rounded border ${badgeStyle} shrink-0">${item.dept}</span>
                                 ${statusBadge}
                                 <div class="font-mono text-xs sm:text-sm font-semibold text-indigo-600 flex items-center gap-1">
-                                    <input type="text" value="${startTime}" class="bg-white/80 border border-slate-200 rounded px-1.5 py-0.5 w-16 text-xs text-center outline-none focus:border-indigo-500" onchange="updateTime('${editKey}', 'start', this.value)">
+                                    <input type="text" value="${startTime}" class="bg-white/80 border border-slate-200 rounded px-1.5 py-0.5 w-16 text-xs text-center outline-none focus:border-indigo-500" onchange="updateEdit('${editKey}', 'start', this.value)">
                                     <span class="text-slate-400">〜</span>
-                                    <input type="text" value="${endTime}" class="bg-white/80 border border-slate-200 rounded px-1.5 py-0.5 w-16 text-xs text-center outline-none focus:border-indigo-500" onchange="updateTime('${editKey}', 'end', this.value)">
+                                    <input type="text" value="${endTime}" class="bg-white/80 border border-slate-200 rounded px-1.5 py-0.5 w-16 text-xs text-center outline-none focus:border-indigo-500" onchange="updateEdit('${editKey}', 'end', this.value)">
                                 </div>
                             </div>
                             <div class="text-sm sm:text-base ${textStyle}">${item.activity}</div>
                             <div class="text-[11px] text-slate-400">${item.activityEn}</div>
                         </div>
                     </div>
-                    <div class="text-[11px] sm:text-xs text-slate-500 sm:text-right pl-8 sm:pl-0 shrink-0">
-                        📍 <span class="bg-white/60 px-2 py-0.5 rounded border border-slate-200">${item.note}</span>
+                    <div class="text-xs text-slate-500 sm:text-right pl-8 sm:pl-0 shrink-0 flex items-center gap-1.5">
+                        📍 
+                        <select onchange="updateEdit('${editKey}', 'note', this.value)" class="bg-white border border-slate-300 rounded px-2 py-1 text-xs text-slate-700 outline-none focus:border-indigo-500">
+                            ${locationOptionsHtml}
+                        </select>
                     </div>
                 `;
                 container.appendChild(card);
@@ -429,7 +449,14 @@
                 const isChecked = userChecks[editKey] || false;
                 if(isChecked) completedCount++;
 
-                // バスの種別によるカラー設定 (TA=選手:青系, TF=審判:紫系, TW=スタッフ:橙系)
+                // コードの末尾番号から国名を判定（例: TA0924SWA001 -> 001）
+                let countryName = "";
+                const match = bus.code.match(/00[1-9]/);
+                if (match) {
+                    const numCode = match[0];
+                    countryName = countryMap[numCode] || "";
+                }
+
                 let typeColor = "bg-blue-100 text-blue-800 border-blue-300";
                 if(bus.type.includes("TF")) typeColor = "bg-purple-100 text-purple-800 border-purple-300";
                 if(bus.type.includes("TW")) typeColor = "bg-amber-100 text-amber-800 border-amber-300";
@@ -443,15 +470,14 @@
                         <div>
                             <div class="flex items-center gap-2 mb-1 flex-wrap">
                                 <span class="px-2 py-0.5 text-[11px] font-bold rounded border ${typeColor} shrink-0">🚌 ${bus.type} (${bus.target})</span>
-                                <span class="font-mono text-[11px] text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded">${bus.code}</span>
+                                <span class="font-mono text-[11px] text-slate-600 bg-slate-100 px-1.5 py-0.5 rounded font-semibold">${countryName || bus.code}</span>
                                 <div class="font-mono text-xs sm:text-sm font-semibold text-indigo-600 flex items-center gap-1">
-                                    <input type="text" value="${startTime}" class="bg-white border border-slate-200 rounded px-1.5 py-0.5 w-16 text-xs text-center outline-none focus:border-indigo-500" onchange="updateTime('${editKey}', 'start', this.value)">
+                                    <input type="text" value="${startTime}" class="bg-white border border-slate-200 rounded px-1.5 py-0.5 w-16 text-xs text-center outline-none focus:border-indigo-500" onchange="updateEdit('${editKey}', 'start', this.value)">
                                     <span class="text-slate-400">着 〜</span>
-                                    <input type="text" value="${endTime}" class="bg-white border border-slate-200 rounded px-1.5 py-0.5 w-16 text-xs text-center outline-none focus:border-indigo-500" onchange="updateTime('${editKey}', 'end', this.value)">
+                                    <input type="text" value="${endTime}" class="bg-white border border-slate-200 rounded px-1.5 py-0.5 w-16 text-xs text-center outline-none focus:border-indigo-500" onchange="updateEdit('${editKey}', 'end', this.value)">
                                     <span class="text-slate-400">発</span>
                                 </div>
                             </div>
-                            <div class="text-sm sm:text-base font-medium text-slate-800 ${isChecked ? 'line-through' : ''}">${bus.desc}</div>
                         </div>
                     </div>
                 `;
@@ -467,15 +493,15 @@
             document.getElementById('progress-bar').style.width = `${percent}%`;
         }
 
-        function updateTime(editKey, field, value) {
+        function updateEdit(editKey, field, value) {
             if (!userEdits[editKey]) userEdits[editKey] = {};
             userEdits[editKey][field] = value;
-            localStorage.setItem('hsc_edits_v10', JSON.stringify(userEdits));
+            localStorage.setItem('hsc_edits_v12', JSON.stringify(userEdits));
         }
 
         function toggleCheck(editKey, checked) {
             userChecks[editKey] = checked;
-            localStorage.setItem('hsc_checks_v10', JSON.stringify(userChecks));
+            localStorage.setItem('hsc_checks_v12', JSON.stringify(userChecks));
             renderView();
         }
 
@@ -519,9 +545,9 @@
         }
 
         function resetData() {
-            if(confirm('変更した時間やチェック状態をすべて初期化しますか？')) {
-                localStorage.removeItem('hsc_edits_v10');
-                localStorage.removeItem('hsc_checks_v10');
+            if(confirm('変更した内容やチェック状態をすべて初期化しますか？')) {
+                localStorage.removeItem('hsc_edits_v12');
+                localStorage.removeItem('hsc_checks_v12');
                 userEdits = {};
                 userChecks = {};
                 renderView();
