@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>デイリーランシート運用ツール - 古橋廣之進浜松市総合水泳場</title>
+    <title>デイリーランシート＆バス運行管理 - 古橋廣之進浜松市総合水泳場</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body { font-family: system-ui, -apple-system, sans-serif; }
@@ -16,10 +16,10 @@
         <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap justify-between items-center gap-3">
             <div>
                 <h1 class="text-base sm:text-xl font-bold flex items-center gap-2">
-                    デイリーランシート
+                    HSC 運営・輸送管理
                     <span id="live-clock" class="text-xs font-mono bg-indigo-900 px-2 py-0.5 rounded text-indigo-200">--:--:--</span>
                 </h1>
-                <p class="text-[11px] text-indigo-200">HSC (古橋廣之進浜松市総合水泳場)</p>
+                <p class="text-[11px] text-indigo-200">古橋廣之進記念浜松市総合水泳場</p>
             </div>
             
             <!-- 日付切り替え (< ＞) -->
@@ -38,12 +38,15 @@
         </div>
     </header>
 
-    <!-- プログレスバー -->
-    <div class="bg-indigo-900 text-indigo-100 py-1.5 px-4 text-xs shadow-inner">
+    <!-- モード切り替えタブ ＆ 進捗 -->
+    <div class="bg-indigo-900 text-indigo-100 py-2 px-4 text-xs shadow-inner">
         <div class="max-w-7xl mx-auto flex flex-wrap justify-between items-center gap-2">
-            <div id="active-alert-banner" class="truncate max-w-[60vw]">
-                <span>ℹ️ 過去のタスクはグレーアウト / 現在のタスクは緑でハイライトされます</span>
+            <!-- タブ切り替え -->
+            <div class="flex items-center bg-indigo-950 p-1 rounded-lg">
+                <button onclick="switchTab('run')" id="tab-run" class="px-3 py-1 rounded text-xs font-bold bg-indigo-600 text-white transition">📋 ランシート</button>
+                <button onclick="switchTab('bus')" id="tab-bus" class="px-3 py-1 rounded text-xs font-bold text-indigo-300 hover:text-white transition">🚌 バス輸送一覧</button>
             </div>
+            
             <div class="flex items-center gap-3">
                 <span id="progress-text">進捗: 0/0 (0%)</span>
                 <div class="w-24 sm:w-32 bg-indigo-950 rounded-full h-2 overflow-hidden">
@@ -56,8 +59,8 @@
     <!-- メインコンテンツ -->
     <main class="max-w-7xl mx-auto px-2 sm:px-4 py-4 flex-grow w-full">
         
-        <!-- フィルターバー -->
-        <div class="bg-white p-3 rounded-xl shadow-sm border border-slate-200 mb-4 flex flex-wrap items-center justify-between gap-3">
+        <!-- フィルターバー (ランシート時のみ有効) -->
+        <div id="filter-bar" class="bg-white p-3 rounded-xl shadow-sm border border-slate-200 mb-4 flex flex-wrap items-center justify-between gap-3">
             <div class="flex items-center gap-1.5 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0">
                 <span class="text-xs font-bold text-slate-600 shrink-0">部門:</span>
                 <div id="dept-filters" class="flex gap-1">
@@ -71,7 +74,7 @@
             <button onclick="exportData()" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-2.5 py-1 rounded border border-slate-300 transition">💾 バックアップ</button>
         </div>
 
-        <!-- スケジュール一覧エリア -->
+        <!-- 一覧表示エリア -->
         <div class="space-y-2.5" id="schedule-list-container">
             <!-- 動的挿入 -->
         </div>
@@ -79,11 +82,11 @@
 
     <!-- フッター -->
     <footer class="bg-white border-t border-slate-200 py-3 text-center text-xs text-slate-500">
-        Daily Run Sheet Viewer &copy; 2026 HSC Management Team
+        Daily Run Sheet & Bus Schedule Viewer &copy; 2026 HSC Management Team
     </footer>
 
     <script>
-        // データ定義 (9/24〜9/28)
+        // --- ランシートデータ (9/24〜9/28) ---
         const standardSchedule = [
             { id: 1, start: "08:00", end: "08:00", dept: "VEM", activity: "VGM・DVGM・VEM・FAM･SVM チェックイン", activityEn: "VGM・DVGM・VEM・FAM Check IN", note: "-" },
             { id: 2, start: "08:00", end: "08:15", dept: "VEM", activity: "開錠", activityEn: "Key OPEN", note: "-" },
@@ -154,6 +157,101 @@
             "2026-09-28": schedule928
         };
 
+        // --- バス輸送スケジュールデータ (PDFより抽出) ---
+        const busData = {
+            "2026-09-24": [
+                { id: 101, start: "09:15", end: "11:35", type: "TA", code: "TA0924SWA001", target: "選手", desc: "水泳(アーティスティックスイミング) 様" },
+                { id: 102, start: "10:15", end: "11:20", type: "TA", code: "TA0924SWA002", target: "選手", desc: "水泳(アーティスティックスイミング) 様" },
+                { id: 103, start: "10:45", end: "12:20", type: "TA", code: "TA0924SWA003", target: "選手", desc: "水泳(アーティスティックスイミング) 様" },
+                { id: 104, start: "12:00", end: "12:50", type: "TA", code: "TA0924SWA004", target: "選手", desc: "水泳(アーティスティックスイミング) 様" },
+                { id: 105, start: "13:00", end: "14:05", type: "TA", code: "TA0924SWA005", target: "選手", desc: "水泳(アーティスティックスイミング) 様" },
+                { id: 106, start: "14:20", end: "15:05", type: "TA", code: "TA0924SWA003", target: "選手", desc: "水泳(アーティスティックスイミング) 様" },
+                { id: 107, start: "14:30", end: "15:00", type: "TA", code: "TA0924SWA001", target: "選手", desc: "水泳(アーティスティックスイミング) 様" },
+                { id: 108, start: "14:50", end: "16:05", type: "TA", code: "TA0924SWA004", target: "選手", desc: "水泳(アーティスティックスイミング) 様" },
+                { id: 109, start: "16:00", end: "18:05", type: "TA", code: "TA0924SWA006", target: "選手", desc: "水泳(アーティスティックスイミング) 様" },
+                { id: 110, start: "16:05", end: "17:05", type: "TA", code: "TA0924SWA005", target: "選手", desc: "水泳(アーティスティックスイミング) 様" },
+                { id: 111, start: "19:10", end: "20:00", type: "TW", code: "TFTMTW0924SWAW04", target: "スタッフ/職員", desc: "水泳(アーティスティックスイミング) 様" },
+                { id: 112, start: "19:15", end: "20:10", type: "TF", code: "TFTMTW0924SWAF04", target: "審判等", desc: "水泳(アーティスティックスイミング) 様" }
+            ],
+            "2026-09-25": [
+                { id: 201, start: "09:15", end: "11:35", type: "TA", code: "TA0925SWA001", target: "選手", desc: "水泳(アーティスティックスイミング) 様" },
+                { id: 202, start: "09:45", end: "11:25", type: "TF", code: "TFTMTW0925SWAF04", target: "審判等", desc: "水泳(アーティスティックスイミング) 様" },
+                { id: 203, start: "10:15", end: "11:20", type: "TA", code: "TA0925SWA002", target: "選手", desc: "水泳(アーティスティックスイミング) 様" },
+                { id: 204, start: "10:45", end: "12:20", type: "TA", code: "TA0925SWA003", target: "選手", desc: "水泳(アーティスティックスイミング) 様" },
+                { id: 205, start: "12:00", end: "12:50", type: "TA", code: "TA0925SWA004", target: "選手", desc: "水泳(アーティスティックスイミング) 様" },
+                { id: 206, start: "13:00", end: "14:05", type: "TA", code: "TA0925SWA005", target: "選手", desc: "水泳(アーティスティックスイミング) 様" },
+                { id: 207, start: "13:00", end: "18:25", type: "TF", code: "TFTMTW0925SWAF02", target: "審判等", desc: "水泳(アーティスティックスイミング) 様" },
+                { id: 208, start: "14:20", end: "15:05", type: "TA", code: "TA0925SWA003", target: "選手", desc: "水泳(アーティスティックスイミング) 様" },
+                { id: 209, start: "14:30", end: "15:00", type: "TA", code: "TA0925SWA001", target: "選手", desc: "水泳(アーティスティックスイミング) 様" },
+                { id: 210, start: "14:50", end: "16:05", type: "TA", code: "TA0925SWA004", target: "選手", desc: "水泳(アーティスティックスイミング) 様" },
+                { id: 211, start: "15:00", end: "19:25", type: "TF", code: "TFTMTW0925SWAF05", target: "審判等", desc: "水泳(アーティスティックスイミング) 様" },
+                { id: 212, start: "16:00", end: "18:05", type: "TA", code: "TA0925SWA006", target: "選手", desc: "水泳(アーティスティックスイミング) 様" },
+                { id: 213, start: "16:05", end: "17:05", type: "TA", code: "TA0925SWA005", target: "選手", desc: "水泳(アーティスティックスイミング) 様" },
+                { id: 214, start: "18:45", end: "20:00", type: "TW", code: "TFTMTW0925SWAW05", target: "スタッフ/職員", desc: "水泳(アーティスティックスイミング) 様" },
+                { id: 215, start: "19:10", end: "20:00", type: "TW", code: "TFTMTW0925SWAW04", target: "スタッフ/職員", desc: "水泳(アーティスティックスイミング) 様" },
+                { id: 216, start: "19:45", end: "20:10", type: "TF", code: "TFTMTW0925SWAF02", target: "審判等", desc: "水泳(アーティスティックスイミング) 様" }
+            ],
+            "2026-09-26": [
+                { id: 301, start: "06:30", end: "09:00", type: "TF/TW", code: "TFTMTW0926SWAM01", target: "審判/スタッフ", desc: "水泳(アーティスティックスイミング) 様" },
+                { id: 302, start: "08:50", end: "14:00", type: "TW", code: "TFTMTW0926SWAW03", target: "スタッフ/職員", desc: "水泳(アーティスティックスイミング) 様" },
+                { id: 303, start: "08:50", end: "14:55", type: "TW", code: "TFTMTW0926SWAW02", target: "スタッフ/職員", desc: "水泳(アーティスティックスイミング) 様" },
+                { id: 304, start: "09:00", end: "13:55", type: "TF", code: "TFTMTW0926SWAF05", target: "審判等", desc: "水泳(アーティスティックスイミング) 様" },
+                { id: 305, start: "09:15", end: "10:15", type: "TA", code: "TA0926SWA003", target: "選手", desc: "水泳(アーティスティックスイミング) 様" },
+                { id: 306, start: "09:15", end: "12:55", type: "TF", code: "TFTMTW0926SWAF03", target: "審判等", desc: "水泳(アーティスティックスイミング) 様" },
+                { id: 307, start: "09:45", end: "12:25", type: "TF", code: "TFTMTW0926SWAF01", target: "審判等", desc: "水泳(アーティスティックスイミング) 様" },
+                { id: 308, start: "10:15", end: "10:35", type: "TA", code: "TA0926SWA005", target: "選手", desc: "水泳(アーティスティックスイミング) 様" },
+                { id: 309, start: "11:15", end: "12:35", type: "TA", code: "TA0926SWA007", target: "選手", desc: "水泳(アーティスティックスイミング) 様" },
+                { id: 310, start: "13:15", end: "13:35", type: "TA", code: "TA0926SWA002", target: "選手", desc: "水泳(アーティスティックスイミング) 様" },
+                { id: 311, start: "14:15", end: "14:35", type: "TA", code: "TA0926SWA006", target: "選手", desc: "水泳(アーティスティックスイミング) 様" },
+                { id: 312, start: "15:15", end: "16:35", type: "TA", code: "TA0926SWA005", target: "選手", desc: "水泳(アーティスティックスイミング) 様" },
+                { id: 313, start: "16:00", end: "19:55", type: "TF", code: "TFTMTW0926SWAM03", target: "審判等", desc: "水泳(アーティスティックスイミング) 様" },
+                { id: 314, start: "16:15", end: "18:05", type: "TA", code: "TA0926SWA002", target: "選手", desc: "水泳(アーティスティックスイミング) 様" },
+                { id: 315, start: "16:35", end: "18:35", type: "TA", code: "TA0926SWA006", target: "選手", desc: "水泳(アーティスティックスイミング) 様" },
+                { id: 316, start: "17:15", end: "17:35", type: "TA", code: "TA0926SWA007", target: "選手", desc: "水泳(アーティスティックスイミング) 様" },
+                { id: 317, start: "18:15", end: "19:05", type: "TA", code: "TA0926SWA004", target: "選手", desc: "水泳(アーティスティックスイミング) 様" },
+                { id: 318, start: "19:00", end: "20:25", type: "TW", code: "TFTMTW0926SWAW01", target: "スタッフ/職員", desc: "水泳(アーティスティックスイミング) 様" },
+                { id: 319, start: "19:55", end: "20:00", type: "TF", code: "TFTMTW0926SWAM04", target: "審判等", desc: "水泳(アーティスティックスイミング) 様" },
+                { id: 320, start: "20:25", end: "22:00", type: "TW", code: "TFTMTW0926SWAW01", target: "スタッフ/職員", desc: "水泳(アーティスティックスイミング) 様" },
+                { id: 321, start: "20:55", end: "22:00", type: "TF", code: "TFTMTW0926SWAM04", target: "審判等", desc: "水泳(アーティスティックスイミング) 様" }
+            ],
+            "2026-09-27": [
+                { id: 401, start: "07:30", end: "08:25", type: "TF", code: "TFTMTW0927SWAF01", target: "審判等", desc: "水泳(アーティスティックスイミング) 様" },
+                { id: 402, start: "07:40", end: "13:25", type: "TF", code: "TFTMTW0927SWAF03", target: "審判等", desc: "水泳(アーティスティックスイミング) 様" },
+                { id: 403, start: "09:15", end: "14:25", type: "TF", code: "TFTMTW0927SWAF05", target: "審判等", desc: "水泳(アーティスティックスイミング) 様" },
+                { id: 404, start: "09:15", end: "10:15", type: "TA", code: "TA0927SWA003", target: "選手", desc: "水泳(アーティスティックスイミング) 様" },
+                { id: 405, start: "09:45", end: "12:25", type: "TF", code: "TFTMTW0927SWAF01", target: "審判等", desc: "水泳(アーティスティックスイミング) 様" },
+                { id: 406, start: "10:00", end: "14:05", type: "TF", code: "TFTMTW0927SWAM01", target: "審判等", desc: "水泳(アーティスティックスイミング) 様" },
+                { id: 407, start: "10:15", end: "10:35", type: "TA", code: "TA0927SWA005", target: "選手", desc: "水泳(アーティスティックスイミング) 様" },
+                { id: 408, start: "11:15", end: "12:35", type: "TA", code: "TA0927SWA007", target: "選手", desc: "水泳(アーティスティックスイミング) 様" },
+                { id: 409, start: "13:15", end: "13:35", type: "TA", code: "TA0927SWA002", target: "選手", desc: "水泳(アーティスティックスイミング) 様" },
+                { id: 410, start: "14:15", end: "14:35", type: "TA", code: "TA0927SWA006", target: "選手", desc: "水泳(アーティスティックスイミング) 様" },
+                { id: 411, start: "15:15", end: "16:35", type: "TA", code: "TA0927SWA005", target: "選手", desc: "水泳(アーティスティックスイミング) 様" },
+                { id: 412, start: "15:25", end: "18:00", type: "TF", code: "TFTMTW0927SWAF04", target: "審判等", desc: "水泳(アーティスティックスイミング) 様" },
+                { id: 413, start: "16:15", end: "18:05", type: "TA", code: "TA0927SWA002", target: "選手", desc: "水泳(アーティスティックスイミング) 様" },
+                { id: 414, start: "16:25", end: "20:55", type: "TF", code: "TFTMTW0927SWAM02", target: "審判等", desc: "水泳(アーティスティックスイミング) 様" },
+                { id: 415, start: "16:35", end: "18:35", type: "TA", code: "TA0927SWA006", target: "選手", desc: "水泳(アーティスティックスイミング) 様" },
+                { id: 416, start: "17:15", end: "17:35", type: "TA", code: "TA0927SWA007", target: "選手", desc: "水泳(アーティスティックスイミング) 様" },
+                { id: 417, start: "18:15", end: "19:05", type: "TA", code: "TA0927SWA004", target: "選手", desc: "水泳(アーティスティックスイミング) 様" },
+                { id: 418, start: "19:00", end: "19:10", type: "TF", code: "TFTMTW0927SWAF04", target: "審判等", desc: "水泳(アーティスティックスイミング) 様" },
+                { id: 419, start: "19:55", end: "20:00", type: "TF", code: "TFTMTW0927SWAM03", target: "審判等", desc: "水泳(アーティスティックスイミング) 様" },
+                { id: 420, start: "20:30", end: "22:00", type: "TF", code: "TFTMTW0927SWAF04", target: "審判等", desc: "水泳(アーティスティックスイミング) 様" },
+                { id: 421, start: "20:55", end: "22:00", type: "TW", code: "TFTMTW0927SWAW04", target: "スタッフ/職員", desc: "水泳(アーティスティックスイミング) 様" }
+            ],
+            "2026-09-28": [
+                { id: 501, start: "07:40", end: "08:40", type: "TF", code: "TFTMTW0928SWAM02", target: "審判等", desc: "水泳(アーティスティックスイミング) 様" },
+                { id: 502, start: "08:15", end: "11:50", type: "TA", code: "TA0928SWA001", target: "選手", desc: "水泳(アーティスティックスイミング) 様" },
+                { id: 503, start: "09:00", end: "14:25", type: "TF", code: "TFTMTW0928SWAM01", target: "審判等", desc: "水泳(アーティスティックスイミング) 様" },
+                { id: 504, start: "09:15", end: "12:40", type: "TF", code: "TFTMTW0928SWAF01", target: "審判等", desc: "水泳(アーティスティックスイミング) 様" },
+                { id: 505, start: "09:15", end: "12:50", type: "TA", code: "TA0928SWA002", target: "選手", desc: "水泳(アーティスティックスイミング) 様" },
+                { id: 506, start: "10:00", end: "13:25", type: "TF", code: "TFTMTW0928SWAM02", target: "審判等", desc: "水泳(アーティスティックスイミング) 様" },
+                { id: 507, start: "10:15", end: "13:50", type: "TA", code: "TA0928SWA003", target: "選手", desc: "水泳(アーティスティックスイミング) 様" },
+                { id: 508, start: "11:15", end: "14:20", type: "TA", code: "TA0928SWA004", target: "選手", desc: "水泳(アーティスティックスイミング) 様" },
+                { id: 509, start: "14:00", end: "14:25", type: "TF", code: "TFTMTW0928SWAF01", target: "審判等", desc: "水泳(アーティスティックスイミング) 様" },
+                { id: 510, start: "14:35", end: "15:25", type: "TF", code: "TFTMTW0928SWAM02", target: "審判等", desc: "水泳(アーティスティックスイミング) 様" },
+                { id: 511, start: "17:20", end: "17:30", type: "TW", code: "TFTMTW0928SWAW03", target: "スタッフ/職員", desc: "水泳(アーティスティックスイミング) 様" }
+            ]
+        };
+
         const dates = [
             { date: "2026-09-24", label: "9月24日 (木)" },
             { date: "2026-09-25", label: "9月25日 (金)" },
@@ -163,13 +261,14 @@
         ];
 
         let currentIndex = 0;
+        let currentTab = 'run'; // 'run' or 'bus'
         let currentDeptFilter = 'ALL';
-        let userEdits = JSON.parse(localStorage.getItem('hsc_schedule_edits_v9') || '{}');
-        let userChecks = JSON.parse(localStorage.getItem('hsc_schedule_checks_v9') || '{}');
+        let userEdits = JSON.parse(localStorage.getItem('hsc_edits_v10') || '{}');
+        let userChecks = JSON.parse(localStorage.getItem('hsc_checks_v10') || '{}');
         let alertedTasks = new Set();
 
         function init() {
-            renderTable();
+            renderView();
             updateDateLabel();
             setInterval(updateClockAndAlerts, 1000);
         }
@@ -178,12 +277,30 @@
             currentIndex += direction;
             if (currentIndex < 0) currentIndex = dates.length - 1;
             if (currentIndex >= dates.length) currentIndex = 0;
-            renderTable();
+            renderView();
             updateDateLabel();
         }
 
         function updateDateLabel() {
             document.getElementById('current-date-label').textContent = dates[currentIndex].label;
+        }
+
+        function switchTab(tab) {
+            currentTab = tab;
+            const tabRun = document.getElementById('tab-run');
+            const tabBus = document.getElementById('tab-bus');
+            const filterBar = document.getElementById('filter-bar');
+
+            if (tab === 'run') {
+                tabRun.className = "px-3 py-1 rounded text-xs font-bold bg-indigo-600 text-white transition";
+                tabBus.className = "px-3 py-1 rounded text-xs font-bold text-indigo-300 hover:text-white transition";
+                filterBar.style.display = "flex";
+            } else {
+                tabBus.className = "px-3 py-1 rounded text-xs font-bold bg-indigo-600 text-white transition";
+                tabRun.className = "px-3 py-1 rounded text-xs font-bold text-indigo-300 hover:text-white transition";
+                filterBar.style.display = "none";
+            }
+            renderView();
         }
 
         function filterDept(dept) {
@@ -195,10 +312,18 @@
                     btn.className = "dept-btn px-2.5 py-1 rounded-full text-[11px] font-semibold bg-slate-200 text-slate-700 hover:bg-slate-300 transition shrink-0";
                 }
             });
-            renderTable();
+            renderView();
         }
 
-        function renderTable() {
+        function renderView() {
+            if (currentTab === 'run') {
+                renderRunSheet();
+            } else {
+                renderBusSchedule();
+            }
+        }
+
+        function renderRunSheet() {
             const container = document.getElementById('schedule-list-container');
             container.innerHTML = '';
             
@@ -216,32 +341,24 @@
 
             const now = new Date();
             const currentHM = String(now.getHours()).padStart(2, '0') + ":" + String(now.getMinutes()).padStart(2, '0');
-            // 表示中の日付が今日と同じか判定 (デモ用に日付が一致する場合も考慮)
             const isToday = (targetDate === now.toISOString().split('T')[0]);
 
             let completedCount = 0;
             const totalCount = filtered.length;
 
             filtered.forEach(item => {
-                const editKey = `${targetDate}_${item.id}`;
+                const editKey = `${targetDate}_run_${item.id}`;
                 const startTime = userEdits[editKey]?.start || item.start;
                 const endTime = userEdits[editKey]?.end || item.end;
                 const isChecked = userChecks[editKey] || false;
                 if(isChecked) completedCount++;
 
-                // 過去・現在・未来の判定
-                let timeStatus = 'future'; // 'past', 'current', 'future'
+                let timeStatus = 'future';
                 if (isToday) {
-                    if (endTime < currentHM) {
-                        timeStatus = 'past';
-                    } else if (startTime <= currentHM && currentHM <= endTime) {
-                        timeStatus = 'current';
-                    } else {
-                        timeStatus = 'future';
-                    }
+                    if (endTime < currentHM) timeStatus = 'past';
+                    else if (startTime <= currentHM && currentHM <= endTime) timeStatus = 'current';
                 }
 
-                // カードのスタイル分岐
                 let cardClass = "bg-white border-slate-200";
                 let textStyle = "text-slate-800";
                 let badgeStyle = "bg-slate-100 text-slate-700 border-slate-200";
@@ -264,15 +381,15 @@
                 
                 card.innerHTML = `
                     <div class="flex items-start sm:items-center gap-3">
-                        <input type="checkbox" ${isChecked ? 'checked' : ''} onchange="toggleCheck('${targetDate}', ${item.id}, this.checked)" class="w-5 h-5 mt-0.5 sm:mt-0 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500 cursor-pointer shrink-0">
+                        <input type="checkbox" ${isChecked ? 'checked' : ''} onchange="toggleCheck('${editKey}', this.checked)" class="w-5 h-5 mt-0.5 sm:mt-0 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500 cursor-pointer shrink-0">
                         <div>
                             <div class="flex items-center gap-2 mb-1 flex-wrap">
                                 <span class="px-2 py-0.5 text-[11px] font-bold rounded border ${badgeStyle} shrink-0">${item.dept}</span>
                                 ${statusBadge}
                                 <div class="font-mono text-xs sm:text-sm font-semibold text-indigo-600 flex items-center gap-1">
-                                    <input type="text" value="${startTime}" class="bg-white/80 border border-slate-200 rounded px-1.5 py-0.5 w-16 text-xs text-center outline-none focus:border-indigo-500" onchange="updateTime('${targetDate}', ${item.id}, 'start', this.value)">
+                                    <input type="text" value="${startTime}" class="bg-white/80 border border-slate-200 rounded px-1.5 py-0.5 w-16 text-xs text-center outline-none focus:border-indigo-500" onchange="updateTime('${editKey}', 'start', this.value)">
                                     <span class="text-slate-400">〜</span>
-                                    <input type="text" value="${endTime}" class="bg-white/80 border border-slate-200 rounded px-1.5 py-0.5 w-16 text-xs text-center outline-none focus:border-indigo-500" onchange="updateTime('${targetDate}', ${item.id}, 'end', this.value)">
+                                    <input type="text" value="${endTime}" class="bg-white/80 border border-slate-200 rounded px-1.5 py-0.5 w-16 text-xs text-center outline-none focus:border-indigo-500" onchange="updateTime('${editKey}', 'end', this.value)">
                                 </div>
                             </div>
                             <div class="text-sm sm:text-base ${textStyle}">${item.activity}</div>
@@ -286,24 +403,80 @@
                 container.appendChild(card);
             });
 
-            // 進捗バー更新
+            updateProgress(completedCount, totalCount);
+        }
+
+        function renderBusSchedule() {
+            const container = document.getElementById('schedule-list-container');
+            container.innerHTML = '';
+            
+            const targetDate = dates[currentIndex].date;
+            const items = busData[targetDate] || [];
+
+            if(items.length === 0) {
+                container.innerHTML = `<div class="bg-white p-8 text-center text-slate-400 rounded-xl shadow-sm">この日のバス運行予定はありません</div>`;
+                updateProgress(0, 0);
+                return;
+            }
+
+            let completedCount = 0;
+            const totalCount = items.length;
+
+            items.forEach(bus => {
+                const editKey = `${targetDate}_bus_${bus.id}`;
+                const startTime = userEdits[editKey]?.start || bus.start;
+                const endTime = userEdits[editKey]?.end || bus.end;
+                const isChecked = userChecks[editKey] || false;
+                if(isChecked) completedCount++;
+
+                // バスの種別によるカラー設定 (TA=選手:青系, TF=審判:紫系, TW=スタッフ:橙系)
+                let typeColor = "bg-blue-100 text-blue-800 border-blue-300";
+                if(bus.type.includes("TF")) typeColor = "bg-purple-100 text-purple-800 border-purple-300";
+                if(bus.type.includes("TW")) typeColor = "bg-amber-100 text-amber-800 border-amber-300";
+
+                const card = document.createElement('div');
+                card.className = `p-3.5 sm:p-4 rounded-xl border bg-white border-slate-200 transition flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${isChecked ? 'opacity-50 bg-slate-50' : ''}`;
+                
+                card.innerHTML = `
+                    <div class="flex items-start sm:items-center gap-3">
+                        <input type="checkbox" ${isChecked ? 'checked' : ''} onchange="toggleCheck('${editKey}', this.checked)" class="w-5 h-5 mt-0.5 sm:mt-0 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500 cursor-pointer shrink-0">
+                        <div>
+                            <div class="flex items-center gap-2 mb-1 flex-wrap">
+                                <span class="px-2 py-0.5 text-[11px] font-bold rounded border ${typeColor} shrink-0">🚌 ${bus.type} (${bus.target})</span>
+                                <span class="font-mono text-[11px] text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded">${bus.code}</span>
+                                <div class="font-mono text-xs sm:text-sm font-semibold text-indigo-600 flex items-center gap-1">
+                                    <input type="text" value="${startTime}" class="bg-white border border-slate-200 rounded px-1.5 py-0.5 w-16 text-xs text-center outline-none focus:border-indigo-500" onchange="updateTime('${editKey}', 'start', this.value)">
+                                    <span class="text-slate-400">着 〜</span>
+                                    <input type="text" value="${endTime}" class="bg-white border border-slate-200 rounded px-1.5 py-0.5 w-16 text-xs text-center outline-none focus:border-indigo-500" onchange="updateTime('${editKey}', 'end', this.value)">
+                                    <span class="text-slate-400">発</span>
+                                </div>
+                            </div>
+                            <div class="text-sm sm:text-base font-medium text-slate-800 ${isChecked ? 'line-through' : ''}">${bus.desc}</div>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+
+            updateProgress(completedCount, totalCount);
+        }
+
+        function updateProgress(completedCount, totalCount) {
             const percent = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
             document.getElementById('progress-text').textContent = `進捗: ${completedCount}/${totalCount} (${percent}%)`;
             document.getElementById('progress-bar').style.width = `${percent}%`;
         }
 
-        function updateTime(date, id, field, value) {
-            const editKey = `${date}_${id}`;
+        function updateTime(editKey, field, value) {
             if (!userEdits[editKey]) userEdits[editKey] = {};
             userEdits[editKey][field] = value;
-            localStorage.setItem('hsc_schedule_edits_v9', JSON.stringify(userEdits));
+            localStorage.setItem('hsc_edits_v10', JSON.stringify(userEdits));
         }
 
-        function toggleCheck(date, id, checked) {
-            const editKey = `${date}_${id}`;
+        function toggleCheck(editKey, checked) {
             userChecks[editKey] = checked;
-            localStorage.setItem('hsc_schedule_checks_v9', JSON.stringify(userChecks));
-            renderTable();
+            localStorage.setItem('hsc_checks_v10', JSON.stringify(userChecks));
+            renderView();
         }
 
         function updateClockAndAlerts() {
@@ -313,60 +486,9 @@
             const seconds = String(now.getSeconds()).padStart(2, '0');
             document.getElementById('live-clock').textContent = `${hours}:${minutes}:${seconds}`;
 
-            // 1分ごとに自動で再描画して過去・現在・未来の色分けを更新
-            if (seconds === '00') {
-                renderTable();
+            if (seconds === '00' && currentTab === 'run') {
+                renderView();
             }
-
-            const currentHM = `${hours}:${minutes}`;
-            const dayItems = scheduleData[dates[currentIndex].date] || [];
-
-            dayItems.forEach(item => {
-                const editKey = `${dates[currentIndex].date}_${item.id}`;
-                const startTime = userEdits[editKey]?.start || item.start;
-                
-                if (startTime && startTime.length >= 5) {
-                    const [sh, sm] = startTime.split(':').map(Number);
-                    if (!isNaN(sh) && !isNaN(sm)) {
-                        let totalMin = sh * 60 + sm - 5;
-                        let alertH = Math.floor(totalMin / 60);
-                        let alertM = totalMin % 60;
-                        let alertHM = `${String(alertH).padStart(2, '0')}:${String(alertM).padStart(2, '0')}`;
-
-                        if (currentHM === alertHM && !alertedTasks.has(editKey)) {
-                            alertedTasks.add(editKey);
-                            triggerAlert(item.activity, startTime);
-                        }
-                    }
-                }
-            });
-        }
-
-        function triggerAlert(activityName, startTime) {
-            playBeep();
-            if (Notification.permission === "granted") {
-                new Notification("まもなく開始のタスク (5分前)", {
-                    body: `[${startTime}] ${activityName}`,
-                    icon: "https://cdn-icons-png.flaticon.com/512/3239/3239952.png"
-                });
-            }
-            const banner = document.getElementById('active-alert-banner');
-            banner.innerHTML = `<span class="text-amber-300 font-bold animate-pulse">🔔 5分前: [${startTime}] ${activityName}</span>`;
-        }
-
-        function playBeep() {
-            try {
-                const ctx = new (window.AudioContext || window.webkitAudioContext)();
-                const osc = ctx.createOscillator();
-                const gain = ctx.createGain();
-                osc.type = 'sine';
-                osc.frequency.value = 880;
-                gain.gain.setValueAtTime(0.1, ctx.currentTime);
-                osc.connect(gain);
-                gain.connect(ctx.destination);
-                osc.start();
-                osc.stop(ctx.currentTime + 0.2);
-            } catch(e) {}
         }
 
         function requestNotificationPermission() {
@@ -392,17 +514,17 @@
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `hsc_schedule_backup_${dates[currentIndex].date}.json`;
+            a.download = `hsc_operation_backup_${dates[currentIndex].date}.json`;
             a.click();
         }
 
         function resetData() {
             if(confirm('変更した時間やチェック状態をすべて初期化しますか？')) {
-                localStorage.removeItem('hsc_schedule_edits_v9');
-                localStorage.removeItem('hsc_schedule_checks_v9');
+                localStorage.removeItem('hsc_edits_v10');
+                localStorage.removeItem('hsc_checks_v10');
                 userEdits = {};
                 userChecks = {};
-                renderTable();
+                renderView();
             }
         }
 
