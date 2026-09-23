@@ -86,7 +86,7 @@
     </footer>
 
     <script>
-        // 国コードマッピング（必要に応じて後から変更・追加可能）
+        // 国コードマッピング
         const countryMap = {
             "001": "🇯🇵 日本",
             "002": "🇹🇭 タイ",
@@ -96,9 +96,6 @@
             "006": "🌏 代表チーム6",
             "007": "🌏 代表チーム7"
         };
-
-        // 場所の選択肢リスト
-        const locationOptions = ["-", "乗車エリア", "メインプール", "サブプール", "控室", "本部席", "VCC", "エントランス", "観客席"];
 
         // --- ランシートデータ (9/24〜9/28) ---
         const standardSchedule = [
@@ -171,7 +168,7 @@
             "2026-09-28": schedule928
         };
 
-        // --- バス輸送スケジュールデータ (国名対応版) ---
+        // --- バス輸送スケジュールデータ ---
         const busData = {
             "2026-09-24": [
                 { id: 101, start: "09:15", end: "11:35", type: "TA", code: "TA0924SWA001", target: "選手" },
@@ -277,8 +274,8 @@
         let currentIndex = 0;
         let currentTab = 'run';
         let currentDeptFilter = 'ALL';
-        let userEdits = JSON.parse(localStorage.getItem('hsc_edits_v12') || '{}');
-        let userChecks = JSON.parse(localStorage.getItem('hsc_checks_v12') || '{}');
+        let userEdits = JSON.parse(localStorage.getItem('hsc_edits_v13') || '{}');
+        let userChecks = JSON.parse(localStorage.getItem('hsc_checks_v13') || '{}');
         let alertedTasks = new Set();
 
         function init() {
@@ -391,7 +388,18 @@
                     statusBadge = `<span class="px-2 py-0.5 text-[10px] font-bold rounded bg-emerald-600 text-white animate-pulse">進行中</span>`;
                 }
 
-                let locationOptionsHtml = locationOptions.map(opt => `<option value="${opt}" ${noteVal === opt ? 'selected' : ''}>${opt}</option>`).join('');
+                // 不明・未定箇所（"-"など）の場合は自由入力テキストボックス、すでに決まっている箇所は固定表示にするロジック
+                let noteDisplayHtml = "";
+                if (item.note === "-" || item.note === "" || item.note === undefined) {
+                    // 不明な箇所は自由に入力・追記可能
+                    const currentCustomNote = userEdits[editKey]?.note !== undefined ? userEdits[editKey].note : (item.note === "-" ? "" : item.note);
+                    noteDisplayHtml = `
+                        📍 <input type="text" value="${currentCustomNote}" placeholder="所属/場所を入力" class="bg-white border border-slate-300 rounded px-2 py-0.5 text-xs text-slate-700 w-28 outline-none focus:border-indigo-500" onchange="updateEdit('${editKey}', 'note', this.value)">
+                    `;
+                } else {
+                    // すでに決まっている箇所はそのまま表示
+                    noteDisplayHtml = `📍 <span class="bg-slate-100 px-2 py-0.5 rounded border border-slate-200 text-slate-600">${item.note}</span>`;
+                }
 
                 const card = document.createElement('div');
                 card.className = `p-3.5 sm:p-4 rounded-xl border transition flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${cardClass}`;
@@ -414,10 +422,7 @@
                         </div>
                     </div>
                     <div class="text-xs text-slate-500 sm:text-right pl-8 sm:pl-0 shrink-0 flex items-center gap-1.5">
-                        📍 
-                        <select onchange="updateEdit('${editKey}', 'note', this.value)" class="bg-white border border-slate-300 rounded px-2 py-1 text-xs text-slate-700 outline-none focus:border-indigo-500">
-                            ${locationOptionsHtml}
-                        </select>
+                        ${noteDisplayHtml}
                     </div>
                 `;
                 container.appendChild(card);
@@ -449,7 +454,6 @@
                 const isChecked = userChecks[editKey] || false;
                 if(isChecked) completedCount++;
 
-                // コードの末尾番号から国名を判定（例: TA0924SWA001 -> 001）
                 let countryName = "";
                 const match = bus.code.match(/00[1-9]/);
                 if (match) {
@@ -496,12 +500,12 @@
         function updateEdit(editKey, field, value) {
             if (!userEdits[editKey]) userEdits[editKey] = {};
             userEdits[editKey][field] = value;
-            localStorage.setItem('hsc_edits_v12', JSON.stringify(userEdits));
+            localStorage.setItem('hsc_edits_v13', JSON.stringify(userEdits));
         }
 
         function toggleCheck(editKey, checked) {
             userChecks[editKey] = checked;
-            localStorage.setItem('hsc_checks_v12', JSON.stringify(userChecks));
+            localStorage.setItem('hsc_checks_v13', JSON.stringify(userChecks));
             renderView();
         }
 
@@ -546,8 +550,8 @@
 
         function resetData() {
             if(confirm('変更した内容やチェック状態をすべて初期化しますか？')) {
-                localStorage.removeItem('hsc_edits_v12');
-                localStorage.removeItem('hsc_checks_v12');
+                localStorage.removeItem('hsc_edits_v13');
+                localStorage.removeItem('hsc_checks_v13');
                 userEdits = {};
                 userChecks = {};
                 renderView();
