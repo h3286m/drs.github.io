@@ -7,53 +7,46 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body { font-family: system-ui, -apple-system, sans-serif; }
-        @keyframes pulse-subtle {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.7; }
-        }
-        .current-row { background-color: #ecfdf5 !important; border-left: 4px solid #10b981; }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
 
     <!-- ヘッダー -->
     <header class="bg-indigo-700 text-white shadow-md sticky top-0 z-30">
-        <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap justify-between items-center gap-4">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap justify-between items-center gap-3">
             <div>
-                <h1 class="text-xl font-bold flex items-center gap-2">
-                    デイリーランシート運用ツール 
+                <h1 class="text-base sm:text-xl font-bold flex items-center gap-2">
+                    デイリーランシート
                     <span id="live-clock" class="text-xs font-mono bg-indigo-900 px-2 py-0.5 rounded text-indigo-200">--:--:--</span>
                 </h1>
-                <p class="text-xs text-indigo-200">会場コード: HSC (古橋廣之進浜松市総合水泳場)</p>
+                <p class="text-[11px] text-indigo-200">HSC (古橋廣之進浜松市総合水泳場)</p>
             </div>
             
             <!-- 日付切り替え (< ＞) -->
             <div class="flex items-center bg-indigo-800 rounded-lg p-1 shadow-inner">
-                <button onclick="changeDay(-1)" class="px-3 py-1 bg-indigo-600 hover:bg-indigo-500 rounded text-sm font-bold transition">◀ 前へ</button>
-                <span id="current-date-label" class="px-4 font-semibold text-lg min-w-[150px] text-center">9月24日 (木)</span>
-                <button onclick="changeDay(1)" class="px-3 py-1 bg-indigo-600 hover:bg-indigo-500 rounded text-sm font-bold transition">次へ ▶</button>
+                <button onclick="changeDay(-1)" class="px-2.5 py-1 bg-indigo-600 hover:bg-indigo-500 rounded text-xs sm:text-sm font-bold transition">◀</button>
+                <span id="current-date-label" class="px-3 font-semibold text-sm sm:text-lg min-w-[120px] text-center">9月24日 (木)</span>
+                <button onclick="changeDay(1)" class="px-2.5 py-1 bg-indigo-600 hover:bg-indigo-500 rounded text-xs sm:text-sm font-bold transition">▶</button>
             </div>
 
             <!-- 機能ボタン -->
-            <div class="flex items-center gap-2">
-                <button onclick="requestNotificationPermission()" id="notif-btn" class="bg-amber-600 hover:bg-amber-500 text-white px-3 py-1.5 rounded text-sm font-medium shadow transition" title="5分前通知を有効化">🔔 通知ON</button>
-                <button onclick="scrollToCurrentTime()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1.5 rounded text-sm font-medium shadow transition flex items-center gap-1">
-                    <span>⏰ 現在へジャンプ</span>
-                </button>
-                <button onclick="resetData()" class="bg-slate-600 hover:bg-slate-500 text-white px-2.5 py-1.5 rounded text-sm transition" title="変更をリセット">初期化</button>
+            <div class="flex items-center gap-1.5">
+                <button onclick="requestNotificationPermission()" id="notif-btn" class="bg-amber-600 hover:bg-amber-500 text-white px-2.5 py-1.5 rounded text-xs font-medium shadow transition" title="5分前通知">🔔通知</button>
+                <button onclick="scrollToCurrentTime()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-2.5 py-1.5 rounded text-xs font-medium shadow transition">⏰現在</button>
+                <button onclick="resetData()" class="bg-slate-600 hover:bg-slate-500 text-white px-2 py-1.5 rounded text-xs transition">初期化</button>
             </div>
         </div>
     </header>
 
-    <!-- アラートバナー / プログレス -->
-    <div class="bg-indigo-900 text-indigo-100 py-2 px-4 text-xs shadow-inner">
+    <!-- プログレスバー -->
+    <div class="bg-indigo-900 text-indigo-100 py-1.5 px-4 text-xs shadow-inner">
         <div class="max-w-7xl mx-auto flex flex-wrap justify-between items-center gap-2">
-            <div id="active-alert-banner" class="flex items-center gap-2 font-medium">
-                <span>ℹ️ タスクの5分前にブラウザ通知でお知らせします。時間を直接書き換えると自動保存されます。</span>
+            <div id="active-alert-banner" class="truncate max-w-[60vw]">
+                <span>ℹ️ 時間タップで編集 / チェックで進捗管理</span>
             </div>
-            <div class="flex items-center gap-4">
-                <span id="progress-text">進捗: 0 / 0 完了</span>
-                <div class="w-32 bg-indigo-950 rounded-full h-2 overflow-hidden">
+            <div class="flex items-center gap-3">
+                <span id="progress-text">進捗: 0/0 (0%)</span>
+                <div class="w-24 sm:w-32 bg-indigo-950 rounded-full h-2 overflow-hidden">
                     <div id="progress-bar" class="bg-emerald-400 h-full transition-all duration-300" style="width: 0%"></div>
                 </div>
             </div>
@@ -61,49 +54,31 @@
     </div>
 
     <!-- メインコンテンツ -->
-    <main class="max-w-7xl mx-auto px-4 py-6 flex-grow w-full">
+    <main class="max-w-7xl mx-auto px-2 sm:px-4 py-4 flex-grow w-full">
         
         <!-- フィルターバー -->
-        <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 mb-6 flex flex-wrap items-center justify-between gap-4">
-            <div class="flex items-center gap-2">
-                <span class="text-sm font-bold text-slate-600">部門フィルター:</span>
-                <div id="dept-filters" class="flex flex-wrap gap-1.5">
-                    <button onclick="filterDept('ALL')" class="dept-btn px-3 py-1 rounded-full text-xs font-semibold bg-indigo-600 text-white transition">すべて</button>
-                    <button onclick="filterDept('VEM')" class="dept-btn px-3 py-1 rounded-full text-xs font-semibold bg-slate-200 text-slate-700 hover:bg-slate-300 transition">VEM</button>
-                    <button onclick="filterDept('SPT')" class="dept-btn px-3 py-1 rounded-full text-xs font-semibold bg-slate-200 text-slate-700 hover:bg-slate-300 transition">SPT</button>
-                    <button onclick="filterDept('TRA')" class="dept-btn px-3 py-1 rounded-full text-xs font-semibold bg-slate-200 text-slate-700 hover:bg-slate-300 transition">TRA</button>
-                    <button onclick="filterDept('VOC')" class="dept-btn px-3 py-1 rounded-full text-xs font-semibold bg-slate-200 text-slate-700 hover:bg-slate-300 transition">VOC/VCC</button>
+        <div class="bg-white p-3 rounded-xl shadow-sm border border-slate-200 mb-4 flex flex-wrap items-center justify-between gap-3">
+            <div class="flex items-center gap-1.5 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0">
+                <span class="text-xs font-bold text-slate-600 shrink-0">部門:</span>
+                <div id="dept-filters" class="flex gap-1">
+                    <button onclick="filterDept('ALL')" class="dept-btn px-2.5 py-1 rounded-full text-[11px] font-semibold bg-indigo-600 text-white transition shrink-0">すべて</button>
+                    <button onclick="filterDept('VEM')" class="dept-btn px-2.5 py-1 rounded-full text-[11px] font-semibold bg-slate-200 text-slate-700 hover:bg-slate-300 transition shrink-0">VEM</button>
+                    <button onclick="filterDept('SPT')" class="dept-btn px-2.5 py-1 rounded-full text-[11px] font-semibold bg-slate-200 text-slate-700 hover:bg-slate-300 transition shrink-0">SPT</button>
+                    <button onclick="filterDept('TRA')" class="dept-btn px-2.5 py-1 rounded-full text-[11px] font-semibold bg-slate-200 text-slate-700 hover:bg-slate-300 transition shrink-0">TRA</button>
+                    <button onclick="filterDept('VOC')" class="dept-btn px-2.5 py-1 rounded-full text-[11px] font-semibold bg-slate-200 text-slate-700 hover:bg-slate-300 transition shrink-0">VOC/VCC</button>
                 </div>
             </div>
-            <div class="flex items-center gap-2">
-                <button onclick="exportData()" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded border border-slate-300 transition">💾 バックアップ保存</button>
-            </div>
+            <button onclick="exportData()" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-2.5 py-1 rounded border border-slate-300 transition">💾 バックアップ</button>
         </div>
 
-        <!-- テーブル表示エリア -->
-        <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-            <div class="max-h-[60vh] overflow-y-auto relative" id="table-container">
-                <table class="w-full text-left border-collapse">
-                    <thead class="bg-slate-100 text-slate-700 uppercase text-xs sticky top-0 z-20 shadow-sm">
-                        <tr>
-                            <th class="py-3 px-4 w-16 text-center border-b">状態</th>
-                            <th class="py-3 px-4 w-28 border-b">時刻 (Start)</th>
-                            <th class="py-3 px-4 w-28 border-b">終了 (Finish)</th>
-                            <th class="py-3 px-4 w-24 border-b">部門 (FA)</th>
-                            <th class="py-3 px-4 border-b">活動内容 (Activity / 日本語)</th>
-                            <th class="py-3 px-4 w-32 border-b">場所 / 備考</th>
-                        </tr>
-                    </thead>
-                    <tbody id="schedule-tbody" class="divide-y divide-slate-100 text-sm">
-                        <!-- 動的挿入 -->
-                    </tbody>
-                </table>
-            </div>
+        <!-- スケジュール一覧エリア -->
+        <div class="space-y-2.5" id="schedule-list-container">
+            <!-- 動的挿入 -->
         </div>
     </main>
 
     <!-- フッター -->
-    <footer class="bg-white border-t border-slate-200 py-4 text-center text-xs text-slate-500">
+    <footer class="bg-white border-t border-slate-200 py-3 text-center text-xs text-slate-500">
         Daily Run Sheet Viewer &copy; 2026 HSC Management Team
     </footer>
 
@@ -189,8 +164,8 @@
 
         let currentIndex = 0;
         let currentDeptFilter = 'ALL';
-        let userEdits = JSON.parse(localStorage.getItem('hsc_schedule_edits_v7') || '{}');
-        let userChecks = JSON.parse(localStorage.getItem('hsc_schedule_checks_v7') || '{}');
+        let userEdits = JSON.parse(localStorage.getItem('hsc_schedule_edits_v8') || '{}');
+        let userChecks = JSON.parse(localStorage.getItem('hsc_schedule_checks_v8') || '{}');
         let alertedTasks = new Set();
 
         function init() {
@@ -215,17 +190,17 @@
             currentDeptFilter = dept;
             document.querySelectorAll('.dept-btn').forEach(btn => {
                 if(btn.textContent.includes(dept) || (dept === 'ALL' && btn.textContent === 'すべて')) {
-                    btn.className = "dept-btn px-3 py-1 rounded-full text-xs font-semibold bg-indigo-600 text-white transition";
+                    btn.className = "dept-btn px-2.5 py-1 rounded-full text-[11px] font-semibold bg-indigo-600 text-white transition shrink-0";
                 } else {
-                    btn.className = "dept-btn px-3 py-1 rounded-full text-xs font-semibold bg-slate-200 text-slate-700 hover:bg-slate-300 transition";
+                    btn.className = "dept-btn px-2.5 py-1 rounded-full text-[11px] font-semibold bg-slate-200 text-slate-700 hover:bg-slate-300 transition shrink-0";
                 }
             });
             renderTable();
         }
 
         function renderTable() {
-            const tbody = document.getElementById('schedule-tbody');
-            tbody.innerHTML = '';
+            const container = document.getElementById('schedule-list-container');
+            container.innerHTML = '';
             
             const targetDate = dates[currentIndex].date;
             const dayItems = scheduleData[targetDate] || [];
@@ -235,7 +210,7 @@
             });
 
             if(filtered.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="6" class="py-12 text-center text-slate-400">データがありません</td></tr>`;
+                container.innerHTML = `<div class="bg-white p-8 text-center text-slate-400 rounded-xl shadow-sm">データがありません</div>`;
                 return;
             }
 
@@ -249,35 +224,35 @@
                 const isChecked = userChecks[editKey] || false;
                 if(isChecked) completedCount++;
 
-                const tr = document.createElement('tr');
-                tr.id = `row-${targetDate}-${item.id}`;
-                tr.className = `hover:bg-slate-50 transition border-b border-slate-100 ${isChecked ? 'opacity-50 bg-slate-50 line-through' : ''}`;
+                const card = document.createElement('div');
+                card.className = `bg-white p-3.5 sm:p-4 rounded-xl shadow-sm border border-slate-200 transition flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${isChecked ? 'opacity-50 bg-slate-50' : ''}`;
                 
-                tr.innerHTML = `
-                    <td class="py-3 px-4 text-center">
-                        <input type="checkbox" ${isChecked ? 'checked' : ''} onchange="toggleCheck('${targetDate}', ${item.id}, this.checked)" class="w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500 cursor-pointer">
-                    </td>
-                    <td class="py-3 px-4 font-mono font-medium text-indigo-600">
-                        <input type="text" value="${startTime}" class="bg-transparent border border-transparent hover:border-slate-300 focus:border-indigo-500 focus:bg-white rounded px-1.5 py-0.5 w-20 text-sm outline-none transition" onchange="updateTime('${targetDate}', ${item.id}, 'start', this.value)">
-                    </td>
-                    <td class="py-3 px-4 font-mono text-slate-600">
-                        <input type="text" value="${endTime}" class="bg-transparent border border-transparent hover:border-slate-300 focus:border-indigo-500 focus:bg-white rounded px-1.5 py-0.5 w-20 text-sm outline-none transition" onchange="updateTime('${targetDate}', ${item.id}, 'end', this.value)">
-                    </td>
-                    <td class="py-3 px-4">
-                        <span class="inline-block px-2 py-0.5 text-xs font-bold rounded bg-slate-100 text-slate-700 border border-slate-200">${item.dept}</span>
-                    </td>
-                    <td class="py-3 px-4">
-                        <div class="font-medium text-slate-800">${item.activity}</div>
-                        <div class="text-xs text-slate-400">${item.activityEn}</div>
-                    </td>
-                    <td class="py-3 px-4 text-xs text-slate-500">${item.note}</td>
+                card.innerHTML = `
+                    <div class="flex items-start sm:items-center gap-3">
+                        <input type="checkbox" ${isChecked ? 'checked' : ''} onchange="toggleCheck('${targetDate}', ${item.id}, this.checked)" class="w-5 h-5 mt-0.5 sm:mt-0 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500 cursor-pointer shrink-0">
+                        <div>
+                            <div class="flex items-center gap-2 mb-1 flex-wrap">
+                                <span class="px-2 py-0.5 text-[11px] font-bold rounded bg-slate-100 text-slate-700 border border-slate-200 shrink-0">${item.dept}</span>
+                                <div class="font-mono text-xs sm:text-sm font-semibold text-indigo-600 flex items-center gap-1">
+                                    <input type="text" value="${startTime}" class="bg-slate-50 border border-slate-200 rounded px-1.5 py-0.5 w-16 text-xs text-center outline-none focus:border-indigo-500 focus:bg-white" onchange="updateTime('${targetDate}', ${item.id}, 'start', this.value)">
+                                    <span class="text-slate-400">〜</span>
+                                    <input type="text" value="${endTime}" class="bg-slate-50 border border-slate-200 rounded px-1.5 py-0.5 w-16 text-xs text-center outline-none focus:border-indigo-500 focus:bg-white" onchange="updateTime('${targetDate}', ${item.id}, 'end', this.value)">
+                                </div>
+                            </div>
+                            <div class="font-medium text-slate-800 text-sm sm:text-base ${isChecked ? 'line-through' : ''}">${item.activity}</div>
+                            <div class="text-[11px] text-slate-400">${item.activityEn}</div>
+                        </div>
+                    </div>
+                    <div class="text-[11px] sm:text-xs text-slate-500 sm:text-right pl-8 sm:pl-0 shrink-0">
+                        📍 <span class="bg-slate-100 px-2 py-0.5 rounded text-slate-600">${item.note}</span>
+                    </div>
                 `;
-                tbody.appendChild(tr);
+                container.appendChild(card);
             });
 
             // 進捗バー更新
             const percent = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
-            document.getElementById('progress-text').textContent = `進捗: ${completedCount} / ${totalCount} (${percent}%)`;
+            document.getElementById('progress-text').textContent = `進捗: ${completedCount}/${totalCount} (${percent}%)`;
             document.getElementById('progress-bar').style.width = `${percent}%`;
         }
 
@@ -285,13 +260,13 @@
             const editKey = `${date}_${id}`;
             if (!userEdits[editKey]) userEdits[editKey] = {};
             userEdits[editKey][field] = value;
-            localStorage.setItem('hsc_schedule_edits_v7', JSON.stringify(userEdits));
+            localStorage.setItem('hsc_schedule_edits_v8', JSON.stringify(userEdits));
         }
 
         function toggleCheck(date, id, checked) {
             const editKey = `${date}_${id}`;
             userChecks[editKey] = checked;
-            localStorage.setItem('hsc_schedule_checks_v7', JSON.stringify(userChecks));
+            localStorage.setItem('hsc_schedule_checks_v8', JSON.stringify(userChecks));
             renderTable();
         }
 
@@ -302,19 +277,13 @@
             const seconds = String(now.getSeconds()).padStart(2, '0');
             document.getElementById('live-clock').textContent = `${hours}:${minutes}:${seconds}`;
 
-            // 5分前チェック (現在表示中の日付が今日またはデモ用の場合)
-            const targetDateObj = new Date(dates[currentIndex].date);
-            const todayStr = now.toISOString().split('T')[0];
-            
-            // デモおよび実運用用に、時刻が一致するものをチェック
             const currentHM = `${hours}:${minutes}`;
             const dayItems = scheduleData[dates[currentIndex].date] || [];
 
             dayItems.forEach(item => {
                 const editKey = `${dates[currentIndex].date}_${item.id}`;
-                const startTime = userEdits[editKey]?.start || item.start; // 例: "08:00"
+                const startTime = userEdits[editKey]?.start || item.start;
                 
-                // 5分前の時刻計算
                 if (startTime && startTime.length >= 5) {
                     const [sh, sm] = startTime.split(':').map(Number);
                     if (!isNaN(sh) && !isNaN(sm)) {
@@ -341,7 +310,7 @@
                 });
             }
             const banner = document.getElementById('active-alert-banner');
-            banner.innerHTML = `<span class="text-amber-300 font-bold animate-pulse">🔔 5分前アラート: [${startTime}] ${activityName} がまもなく始まります！</span>`;
+            banner.innerHTML = `<span class="text-amber-300 font-bold animate-pulse">🔔 5分前: [${startTime}] ${activityName}</span>`;
         }
 
         function playBeep() {
@@ -366,18 +335,14 @@
             }
             Notification.requestPermission().then(permission => {
                 if (permission === "granted") {
-                    alert("通知が有効化されました。各項目の5分前にデスクトップ通知が届きます。");
-                    document.getElementById('notif-btn').textContent = "🔔 通知有効";
-                    document.getElementById('notif-btn').className = "bg-emerald-600 text-white px-3 py-1.5 rounded text-sm font-medium shadow transition";
-                } else {
-                    alert("通知が拒否されました。ブラウザの設定をご確認ください。");
+                    alert("通知が有効化されました。");
+                    document.getElementById('notif-btn').textContent = "🔔有効";
                 }
             });
         }
 
         function scrollToCurrentTime() {
-            const container = document.getElementById('table-container');
-            container.scrollTo({ top: 0, behavior: 'smooth' });
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
         function exportData() {
@@ -392,8 +357,8 @@
 
         function resetData() {
             if(confirm('変更した時間やチェック状態をすべて初期化しますか？')) {
-                localStorage.removeItem('hsc_schedule_edits_v7');
-                localStorage.removeItem('hsc_schedule_checks_v7');
+                localStorage.removeItem('hsc_schedule_edits_v8');
+                localStorage.removeItem('hsc_schedule_checks_v8');
                 userEdits = {};
                 userChecks = {};
                 renderTable();
