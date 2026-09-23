@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>デイリーランシート運用ツール - 古橋廣之進浜松市総合水泳場</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { font-family: system-ui, -apple-system, sans-serif; }
+        @keyframes pulse-subtle {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        .current-row { background-color: #ecfdf5 !important; border-left: 4px solid #10b981; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
+
+    <!-- ヘッダー -->
+    <header class="bg-indigo-700 text-white shadow-md sticky top-0 z-30">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap justify-between items-center gap-4">
+            <div>
+                <h1 class="text-xl font-bold flex items-center gap-2">
+                    デイリーランシート運用ツール 
+                    <span id="live-clock" class="text-xs font-mono bg-indigo-900 px-2 py-0.5 rounded text-indigo-200">--:--:--</span>
+                </h1>
+                <p class="text-xs text-indigo-200">会場コード: HSC (古橋廣之進浜松市総合水泳場)</p>
+            </div>
+            
+            <!-- 日付切り替え (< ＞) -->
+            <div class="flex items-center bg-indigo-800 rounded-lg p-1 shadow-inner">
+                <button onclick="changeDay(-1)" class="px-3 py-1 bg-indigo-600 hover:bg-indigo-500 rounded text-sm font-bold transition">◀ 前へ</button>
+                <span id="current-date-label" class="px-4 font-semibold text-lg min-w-[150px] text-center">9月24日 (木)</span>
+                <button onclick="changeDay(1)" class="px-3 py-1 bg-indigo-600 hover:bg-indigo-500 rounded text-sm font-bold transition">次へ ▶</button>
+            </div>
+
+            <!-- 機能ボタン -->
+            <div class="flex items-center gap-2">
+                <button onclick="requestNotificationPermission()" id="notif-btn" class="bg-amber-600 hover:bg-amber-500 text-white px-3 py-1.5 rounded text-sm font-medium shadow transition" title="5分前通知を有効化">🔔 通知ON</button>
+                <button onclick="scrollToCurrentTime()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1.5 rounded text-sm font-medium shadow transition flex items-center gap-1">
+                    <span>⏰ 現在へジャンプ</span>
+                </button>
+                <button onclick="resetData()" class="bg-slate-600 hover:bg-slate-500 text-white px-2.5 py-1.5 rounded text-sm transition" title="変更をリセット">初期化</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- アラートバナー / プログレス -->
+    <div class="bg-indigo-900 text-indigo-100 py-2 px-4 text-xs shadow-inner">
+        <div class="max-w-7xl mx-auto flex flex-wrap justify-between items-center gap-2">
+            <div id="active-alert-banner" class="flex items-center gap-2 font-medium">
+                <span>ℹ️ タスクの5分前にブラウザ通知でお知らせします。時間を直接書き換えると自動保存されます。</span>
+            </div>
+            <div class="flex items-center gap-4">
+                <span id="progress-text">進捗: 0 / 0 完了</span>
+                <div class="w-32 bg-indigo-950 rounded-full h-2 overflow-hidden">
+                    <div id="progress-bar" class="bg-emerald-400 h-full transition-all duration-300" style="width: 0%"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- メインコンテンツ -->
+    <main class="max-w-7xl mx-auto px-4 py-6 flex-grow w-full">
+        
+        <!-- フィルターバー -->
+        <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 mb-6 flex flex-wrap items-center justify-between gap-4">
+            <div class="flex items-center gap-2">
+                <span class="text-sm font-bold text-slate-600">部門フィルター:</span>
+                <div id="dept-filters" class="flex flex-wrap gap-1.5">
+                    <button onclick="filterDept('ALL')" class="dept-btn px-3 py-1 rounded-full text-xs font-semibold bg-indigo-600 text-white transition">すべて</button>
+                    <button onclick="filterDept('VEM')" class="dept-btn px-3 py-1 rounded-full text-xs font-semibold bg-slate-200 text-slate-700 hover:bg-slate-300 transition">VEM</button>
+                    <button onclick="filterDept('SPT')" class="dept-btn px-3 py-1 rounded-full text-xs font-semibold bg-slate-200 text-slate-700 hover:bg-slate-300 transition">SPT</button>
+                    <button onclick="filterDept('TRA')" class="dept-btn px-3 py-1 rounded-full text-xs font-semibold bg-slate-200 text-slate-700 hover:bg-slate-300 transition">TRA</button>
+                    <button onclick="filterDept('VOC')" class="dept-btn px-3 py-1 rounded-full text-xs font-semibold bg-slate-200 text-slate-700 hover:bg-slate-300 transition">VOC/VCC</button>
+                </div>
+            </div>
+            <div class="flex items-center gap-2">
+                <button onclick="exportData()" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded border border-slate-300 transition">💾 バックアップ保存</button>
+            </div>
+        </div>
+
+        <!-- テーブル表示エリア -->
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+            <div class="max-h-[60vh] overflow-y-auto relative" id="table-container">
+                <table class="w-full text-left border-collapse">
+                    <thead class="bg-slate-100 text-slate-700 uppercase text-xs sticky top-0 z-20 shadow-sm">
+                        <tr>
+                            <th class="py-3 px-4 w-16 text-center border-b">状態</th>
+                            <th class="py-3 px-4 w-28 border-b">時刻 (Start)</th>
+                            <th class="py-3 px-4 w-28 border-b">終了 (Finish)</th>
+                            <th class="py-3 px-4 w-24 border-b">部門 (FA)</th>
+                            <th class="py-3 px-4 border-b">活動内容 (Activity / 日本語)</th>
+                            <th class="py-3 px-4 w-32 border-b">場所 / 備考</th>
+                        </tr>
+                    </thead>
+                    <tbody id="schedule-tbody" class="divide-y divide-slate-100 text-sm">
+                        <!-- 動的挿入 -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <!-- フッター -->
+    <footer class="bg-white border-t border-slate-200 py-4 text-center text-xs text-slate-500">
+        Daily Run Sheet Viewer &copy; 2026 HSC Management Team
+    </footer>
+
+    <script>
+        // データ定義 (9/24〜9/28)
+        const standardSchedule = [
+            { id: 1, start: "08:00", end: "08:00", dept: "VEM", activity: "VGM・DVGM・VEM・FAM･SVM チェックイン", activityEn: "VGM・DVGM・VEM・FAM Check IN", note: "-" },
+            { id: 2, start: "08:00", end: "08:15", dept: "VEM", activity: "開錠", activityEn: "Key OPEN", note: "-" },
+            { id: 3, start: "08:00", end: "08:00", dept: "VEM", activity: "エアコンスイッチオン", activityEn: "#Air Condition Start", note: "-" },
+            { id: 4, start: "08:00", end: "08:00", dept: "SPT", activity: "SVM チェックイン", activityEn: "SVM Check IN", note: "-" },
+            { id: 5, start: "08:00", end: "08:00", dept: "VEM", activity: "VEM-VCC① VEM-CCC① VEM-ACP① ボランティアチェックイン", activityEn: "VEM-VCC①VEM-CCC①VEM-ACP① Volunteers check in", note: "VCC① / CCC①" },
+            { id: 6, start: "08:00", end: "08:05", dept: "VEM", activity: "VEM-VCC① VEM-CCC① VEM-ACP① ボランティアブリーフィング", activityEn: "VEM-VCC①VEM-CCC①VEM-ACP① Volunteers' briefings", note: "VCC① / CCC①" },
+            { id: 7, start: "08:15", end: "08:15", dept: "VEM", activity: "VOC・VCC オープン", activityEn: "VOC / VCC OPEN", note: "-" },
+            { id: 8, start: "08:15", end: "08:20", dept: "VEM", activity: "VCCオールコール", activityEn: "VCC ALL CALL", note: "-" },
+            { id: 9, start: "08:30", end: "09:00", dept: "ALL", activity: "全体朝礼", activityEn: "ALL Meeting / Managers-Coordinators", note: "全体ミーティング" },
+            { id: 10, start: "09:25", end: "09:25", dept: "TRA/SPT", activity: "選手会場到着（ホテル発第一便）", activityEn: "Athletes arrives venue (First departure)", note: "*Draft" },
+            { id: 11, start: "09:30", end: "09:30", dept: "SPT", activity: "公式練習開始", activityEn: "Official Training Begins", note: "-" },
+            { id: 12, start: "10:00", end: "10:00", dept: "VEM", activity: "VEM-VCC② VEM-CCC② ボランティアチェックイン", activityEn: "VEM-VCC② VEM-CCC② Volunteers check in", note: "VCC② / CCC②" },
+            { id: 13, start: "10:00", end: "10:05", dept: "VEM", activity: "VEM-VCC② VEM-CCC② ボランティアブリーフィング", activityEn: "VEM-VCC② VEM-CCC② Volunteers' briefings", note: "VCC② / CCC②" },
+            { id: 14, start: "13:30", end: "13:30", dept: "VEM", activity: "VEM-VCC③ VEM-CCC③ ボランティアチェックイン", activityEn: "VEM-VCC③ VEM-CCC③ Volunteers check in", note: "VCC③ / CCC③" },
+            { id: 15, start: "13:30", end: "13:35", dept: "VEM", activity: "VEM-VCC③ VEM-CCC③ ボランティアブリーフィング", activityEn: "VEM-VCC③ VEM-CCC③ Volunteers' briefings", note: "VCC③ / CCC③" },
+            { id: 16, start: "14:30", end: "14:30", dept: "VEM", activity: "VEM-VCC① VEM-CCC① VEM-ACP① チェックアウト", activityEn: "VEM-VCC① VEM-CCC① VEM-ACP① Check out", note: "-" },
+            { id: 17, start: "18:00", end: "18:00", dept: "VEM", activity: "VEM-VCC② VEM-CCC② チェックアウト", activityEn: "VEM-VCC② VEM-CCC② Check out", note: "-" },
+            { id: 18, start: "18:00", end: "18:00", dept: "SPT", activity: "公式練習終了", activityEn: "Official Training Ends", note: "-" },
+            { id: 19, start: "18:30", end: "18:30", dept: "TRA/SPT", activity: "選手会場出発（会場発最終便）", activityEn: "Athlete bus Departure (Final departure)", note: "Boarding area" },
+            { id: 20, start: "19:30", end: "19:30", dept: "VEM", activity: "VEM-VCC③ VEM-CCC③ チェックアウト", activityEn: "VEM-VCC③ VEM-CCC③ Check out", note: "-" },
+            { id: 21, start: "19:30", end: "22:00", dept: "VEM", activity: "VOC・VCC クローズ", activityEn: "VOC・VCC Close", note: "-" },
+            { id: 22, start: "19:30", end: "20:00", dept: "VEM", activity: "施錠", activityEn: "Key Rock", note: "-" },
+            { id: 23, start: "19:30", end: "19:30", dept: "VEM", activity: "エアコンスイッチオフ", activityEn: "Air Condition off", note: "-" },
+            { id: 24, start: "20:00", end: "20:00", dept: "VEM", activity: "VGM・DVGM・VEM・FAM チェックアウト", activityEn: "VGM・DVGM・VEM・FAM Check OUT", note: "-" }
+        ];
+
+        const schedule926 = [
+            { id: 1, start: "06:30", end: "06:30", dept: "VEM", activity: "VGM・DVGM・VEM・FAM･SVM チェックイン", activityEn: "VGM・DVGM・VEM・FAM Check IN", note: "-" },
+            { id: 2, start: "06:30", end: "06:45", dept: "VEM", activity: "開錠", activityEn: "Key OPEN", note: "-" },
+            { id: 3, start: "06:30", end: "06:30", dept: "VEM", activity: "エアコンスイッチオン", activityEn: "#Air Condition Start", note: "-" },
+            { id: 4, start: "06:30", end: "06:30", dept: "SPT", activity: "SVM チェックイン", activityEn: "SVM Check IN", note: "-" },
+            { id: 5, start: "08:00", end: "08:00", dept: "VEM", activity: "VEM-VCC① VEM-CCC① VEM-ACP① ボランティアチェックイン", activityEn: "VEM-VCC① VEM-CCC① VEM-ACP① Volunteers check in", note: "-" },
+            { id: 6, start: "08:00", end: "08:05", dept: "VEM", activity: "VEM-VCC① VEM-CCC① VEM-ACP① ボランティアブリーフィング", activityEn: "VEM-VCC① VEM-CCC① VEM-ACP① Volunteers' briefings", note: "-" },
+            { id: 7, start: "06:45", end: "06:45", dept: "VEM", activity: "VOC オープン", activityEn: "VOC OPEN", note: "-" },
+            { id: 8, start: "06:45", end: "06:45", dept: "VEM", activity: "VCC オープン", activityEn: "VCC OPEN", note: "-" },
+            { id: 9, start: "07:00", end: "07:00", dept: "VEM", activity: "VCCオールコール", activityEn: "VCC, ALL Call", note: "-" },
+            { id: 10, start: "07:00", end: "07:30", dept: "ALL", activity: "全体朝礼", activityEn: "ALL Meeting / Managers-Coordinators", note: "-" },
+            { id: 11, start: "07:55", end: "07:55", dept: "TRA/SPT", activity: "選手会場到着（ホテル発第一便）", activityEn: "Athletes arrives venue (First departure)", note: "*Draft" },
+            { id: 12, start: "08:00", end: "10:00", dept: "SPT", activity: "選手ウォーミングアップ / 公式練習（10時まで曲かけ）", activityEn: "Athlete Warm Up & Official Practice", note: "曲かけあり" },
+            { id: 13, start: "10:00", end: "10:00", dept: "VEM", activity: "VEM-VCC② VEM-CCC② ボランティアチェックイン", activityEn: "VEM-VCC② VEM-CCC② Volunteers check in", note: "-" },
+            { id: 14, start: "10:00", end: "10:05", dept: "VEM", activity: "VEM-VCC② VEM-CCC② ボランティアブリーフィング", activityEn: "VEM-VCC② VEM-CCC② Volunteers' briefings", note: "-" },
+            { id: 15, start: "11:00", end: "12:30", dept: "SPT", activity: "SWA01 Women Duet ‐ Technical Routine", activityEn: "SWA01 START - ZERO TIME", note: "セッション1" },
+            { id: 16, start: "12:30", end: "12:30", dept: "SPT", activity: "SWA01 終了", activityEn: "SWA01 END", note: "-" },
+            { id: 17, start: "13:30", end: "13:30", dept: "VEM", activity: "VEM-VCC③ VEM-CCC③ ボランティアチェックイン", activityEn: "VEM-VCC③ VEM-CCC③ Volunteers check in", note: "-" },
+            { id: 18, start: "13:30", end: "13:35", dept: "VEM", activity: "VEM-VCC③ VEM-CCC③ ボランティアブリーフィング", activityEn: "VEM-VCC③ VEM-CCC③ Volunteers' briefings", note: "-" },
+            { id: 19, start: "14:00", end: "16:00", dept: "SPT", activity: "選手ウォーミングアップ / 公式練習（16時まで曲かけ）", activityEn: "Athlete Warm Up & Official Practice", note: "曲かけあり" },
+            { id: 20, start: "14:30", end: "14:30", dept: "VEM", activity: "VEM-VCC① VEM-CCC① VEM-ACP① ボランティアチェックアウト", activityEn: "VEM-VCC① VEM-CCC① VEM-ACP① Check out", note: "-" },
+            { id: 21, start: "17:00", end: "18:30", dept: "SPT", activity: "SWA02 Mixed Team - Acrobatic Routine", activityEn: "SWA02 START - ZERO TIME", note: "セッション2" },
+            { id: 22, start: "18:30", end: "18:30", dept: "SPT", activity: "SWA02 終了", activityEn: "SWA02 END", note: "-" },
+            { id: 23, start: "18:00", end: "18:00", dept: "VEM", activity: "VEM-VCC② VEM-CCC② ボランティアチェックアウト", activityEn: "VEM-VCC② VEM-CCC② Check out", note: "-" },
+            { id: 24, start: "19:00", end: "19:00", dept: "TRA/SPT", activity: "選手会場出発（会場発最終便）", activityEn: "Athlete bus Departure (Final)", note: "Boarding area" },
+            { id: 25, start: "21:30", end: "21:30", dept: "VEM", activity: "VEM-VCC③ VEM-CCC③ VEM-ACP② ボランティアチェックアウト", activityEn: "VEM-VCC③VEM-CCC③VEM-ACP② Check out", note: "-" },
+            { id: 26, start: "21:30", end: "21:30", dept: "VEM", activity: "VOC・VCC クローズ", activityEn: "VOC・VCC Close", note: "-" },
+            { id: 27, start: "21:30", end: "22:00", dept: "VEM", activity: "施錠", activityEn: "Key Rock", note: "-" },
+            { id: 28, start: "21:30", end: "21:30", dept: "VEM", activity: "エアコンスイッチオフ", activityEn: "Air Condition off", note: "-" },
+            { id: 29, start: "22:00", end: "22:00", dept: "VEM", activity: "VGM・DVGM・VEM・FAM チェックアウト", activityEn: "VGM・DVGM・VEM・FAM Check OUT", note: "-" }
+        ];
+
+        const schedule927 = JSON.parse(JSON.stringify(schedule926));
+        const schedule928 = JSON.parse(JSON.stringify(schedule926));
+
+        const scheduleData = {
+            "2026-09-24": standardSchedule,
+            "2026-09-25": standardSchedule,
+            "2026-09-26": schedule926,
+            "2026-09-27": schedule927,
+            "2026-09-28": schedule928
+        };
+
+        const dates = [
+            { date: "2026-09-24", label: "9月24日 (木)" },
+            { date: "2026-09-25", label: "9月25日 (金)" },
+            { date: "2026-09-26", label: "9月26日 (土)" },
+            { date: "2026-09-27", label: "9月27日 (日)" },
+            { date: "2026-09-28", label: "9月28日 (月)" },
+        ];
+
+        let currentIndex = 0;
+        let currentDeptFilter = 'ALL';
+        let userEdits = JSON.parse(localStorage.getItem('hsc_schedule_edits_v7') || '{}');
+        let userChecks = JSON.parse(localStorage.getItem('hsc_schedule_checks_v7') || '{}');
+        let alertedTasks = new Set();
+
+        function init() {
+            renderTable();
+            updateDateLabel();
+            setInterval(updateClockAndAlerts, 1000);
+        }
+
+        function changeDay(direction) {
+            currentIndex += direction;
+            if (currentIndex < 0) currentIndex = dates.length - 1;
+            if (currentIndex >= dates.length) currentIndex = 0;
+            renderTable();
+            updateDateLabel();
+        }
+
+        function updateDateLabel() {
+            document.getElementById('current-date-label').textContent = dates[currentIndex].label;
+        }
+
+        function filterDept(dept) {
+            currentDeptFilter = dept;
+            document.querySelectorAll('.dept-btn').forEach(btn => {
+                if(btn.textContent.includes(dept) || (dept === 'ALL' && btn.textContent === 'すべて')) {
+                    btn.className = "dept-btn px-3 py-1 rounded-full text-xs font-semibold bg-indigo-600 text-white transition";
+                } else {
+                    btn.className = "dept-btn px-3 py-1 rounded-full text-xs font-semibold bg-slate-200 text-slate-700 hover:bg-slate-300 transition";
+                }
+            });
+            renderTable();
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('schedule-tbody');
+            tbody.innerHTML = '';
+            
+            const targetDate = dates[currentIndex].date;
+            const dayItems = scheduleData[targetDate] || [];
+            
+            const filtered = dayItems.filter(item => {
+                return currentDeptFilter === 'ALL' || item.dept.includes(currentDeptFilter);
+            });
+
+            if(filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="py-12 text-center text-slate-400">データがありません</td></tr>`;
+                return;
+            }
+
+            let completedCount = 0;
+            const totalCount = filtered.length;
+
+            filtered.forEach(item => {
+                const editKey = `${targetDate}_${item.id}`;
+                const startTime = userEdits[editKey]?.start || item.start;
+                const endTime = userEdits[editKey]?.end || item.end;
+                const isChecked = userChecks[editKey] || false;
+                if(isChecked) completedCount++;
+
+                const tr = document.createElement('tr');
+                tr.id = `row-${targetDate}-${item.id}`;
+                tr.className = `hover:bg-slate-50 transition border-b border-slate-100 ${isChecked ? 'opacity-50 bg-slate-50 line-through' : ''}`;
+                
+                tr.innerHTML = `
+                    <td class="py-3 px-4 text-center">
+                        <input type="checkbox" ${isChecked ? 'checked' : ''} onchange="toggleCheck('${targetDate}', ${item.id}, this.checked)" class="w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500 cursor-pointer">
+                    </td>
+                    <td class="py-3 px-4 font-mono font-medium text-indigo-600">
+                        <input type="text" value="${startTime}" class="bg-transparent border border-transparent hover:border-slate-300 focus:border-indigo-500 focus:bg-white rounded px-1.5 py-0.5 w-20 text-sm outline-none transition" onchange="updateTime('${targetDate}', ${item.id}, 'start', this.value)">
+                    </td>
+                    <td class="py-3 px-4 font-mono text-slate-600">
+                        <input type="text" value="${endTime}" class="bg-transparent border border-transparent hover:border-slate-300 focus:border-indigo-500 focus:bg-white rounded px-1.5 py-0.5 w-20 text-sm outline-none transition" onchange="updateTime('${targetDate}', ${item.id}, 'end', this.value)">
+                    </td>
+                    <td class="py-3 px-4">
+                        <span class="inline-block px-2 py-0.5 text-xs font-bold rounded bg-slate-100 text-slate-700 border border-slate-200">${item.dept}</span>
+                    </td>
+                    <td class="py-3 px-4">
+                        <div class="font-medium text-slate-800">${item.activity}</div>
+                        <div class="text-xs text-slate-400">${item.activityEn}</div>
+                    </td>
+                    <td class="py-3 px-4 text-xs text-slate-500">${item.note}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            // 進捗バー更新
+            const percent = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
+            document.getElementById('progress-text').textContent = `進捗: ${completedCount} / ${totalCount} (${percent}%)`;
+            document.getElementById('progress-bar').style.width = `${percent}%`;
+        }
+
+        function updateTime(date, id, field, value) {
+            const editKey = `${date}_${id}`;
+            if (!userEdits[editKey]) userEdits[editKey] = {};
+            userEdits[editKey][field] = value;
+            localStorage.setItem('hsc_schedule_edits_v7', JSON.stringify(userEdits));
+        }
+
+        function toggleCheck(date, id, checked) {
+            const editKey = `${date}_${id}`;
+            userChecks[editKey] = checked;
+            localStorage.setItem('hsc_schedule_checks_v7', JSON.stringify(userChecks));
+            renderTable();
+        }
+
+        function updateClockAndAlerts() {
+            const now = new Date();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            document.getElementById('live-clock').textContent = `${hours}:${minutes}:${seconds}`;
+
+            // 5分前チェック (現在表示中の日付が今日またはデモ用の場合)
+            const targetDateObj = new Date(dates[currentIndex].date);
+            const todayStr = now.toISOString().split('T')[0];
+            
+            // デモおよび実運用用に、時刻が一致するものをチェック
+            const currentHM = `${hours}:${minutes}`;
+            const dayItems = scheduleData[dates[currentIndex].date] || [];
+
+            dayItems.forEach(item => {
+                const editKey = `${dates[currentIndex].date}_${item.id}`;
+                const startTime = userEdits[editKey]?.start || item.start; // 例: "08:00"
+                
+                // 5分前の時刻計算
+                if (startTime && startTime.length >= 5) {
+                    const [sh, sm] = startTime.split(':').map(Number);
+                    if (!isNaN(sh) && !isNaN(sm)) {
+                        let totalMin = sh * 60 + sm - 5;
+                        let alertH = Math.floor(totalMin / 60);
+                        let alertM = totalMin % 60;
+                        let alertHM = `${String(alertH).padStart(2, '0')}:${String(alertM).padStart(2, '0')}`;
+
+                        if (currentHM === alertHM && !alertedTasks.has(editKey)) {
+                            alertedTasks.add(editKey);
+                            triggerAlert(item.activity, startTime);
+                        }
+                    }
+                }
+            });
+        }
+
+        function triggerAlert(activityName, startTime) {
+            playBeep();
+            if (Notification.permission === "granted") {
+                new Notification("まもなく開始のタスク (5分前)", {
+                    body: `[${startTime}] ${activityName}`,
+                    icon: "https://cdn-icons-png.flaticon.com/512/3239/3239952.png"
+                });
+            }
+            const banner = document.getElementById('active-alert-banner');
+            banner.innerHTML = `<span class="text-amber-300 font-bold animate-pulse">🔔 5分前アラート: [${startTime}] ${activityName} がまもなく始まります！</span>`;
+        }
+
+        function playBeep() {
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.value = 880;
+                gain.gain.setValueAtTime(0.1, ctx.currentTime);
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.start();
+                osc.stop(ctx.currentTime + 0.2);
+            } catch(e) {}
+        }
+
+        function requestNotificationPermission() {
+            if (!("Notification" in window)) {
+                alert("お使いのブラウザは通知に対応していません。");
+                return;
+            }
+            Notification.requestPermission().then(permission => {
+                if (permission === "granted") {
+                    alert("通知が有効化されました。各項目の5分前にデスクトップ通知が届きます。");
+                    document.getElementById('notif-btn').textContent = "🔔 通知有効";
+                    document.getElementById('notif-btn').className = "bg-emerald-600 text-white px-3 py-1.5 rounded text-sm font-medium shadow transition";
+                } else {
+                    alert("通知が拒否されました。ブラウザの設定をご確認ください。");
+                }
+            });
+        }
+
+        function scrollToCurrentTime() {
+            const container = document.getElementById('table-container');
+            container.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function exportData() {
+            const dataObj = { edits: userEdits, checks: userChecks };
+            const blob = new Blob([JSON.stringify(dataObj, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `hsc_schedule_backup_${dates[currentIndex].date}.json`;
+            a.click();
+        }
+
+        function resetData() {
+            if(confirm('変更した時間やチェック状態をすべて初期化しますか？')) {
+                localStorage.removeItem('hsc_schedule_edits_v7');
+                localStorage.removeItem('hsc_schedule_checks_v7');
+                userEdits = {};
+                userChecks = {};
+                renderTable();
+            }
+        }
+
+        window.onload = init;
+    </script>
+</body>
+</html>
