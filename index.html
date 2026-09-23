@@ -42,7 +42,7 @@
     <div class="bg-indigo-900 text-indigo-100 py-1.5 px-4 text-xs shadow-inner">
         <div class="max-w-7xl mx-auto flex flex-wrap justify-between items-center gap-2">
             <div id="active-alert-banner" class="truncate max-w-[60vw]">
-                <span>ℹ️ 時間タップで編集 / チェックで進捗管理</span>
+                <span>ℹ️ 過去のタスクはグレーアウト / 現在のタスクは緑でハイライトされます</span>
             </div>
             <div class="flex items-center gap-3">
                 <span id="progress-text">進捗: 0/0 (0%)</span>
@@ -164,8 +164,8 @@
 
         let currentIndex = 0;
         let currentDeptFilter = 'ALL';
-        let userEdits = JSON.parse(localStorage.getItem('hsc_schedule_edits_v8') || '{}');
-        let userChecks = JSON.parse(localStorage.getItem('hsc_schedule_checks_v8') || '{}');
+        let userEdits = JSON.parse(localStorage.getItem('hsc_schedule_edits_v9') || '{}');
+        let userChecks = JSON.parse(localStorage.getItem('hsc_schedule_checks_v9') || '{}');
         let alertedTasks = new Set();
 
         function init() {
@@ -214,6 +214,11 @@
                 return;
             }
 
+            const now = new Date();
+            const currentHM = String(now.getHours()).padStart(2, '0') + ":" + String(now.getMinutes()).padStart(2, '0');
+            // 表示中の日付が今日と同じか判定 (デモ用に日付が一致する場合も考慮)
+            const isToday = (targetDate === now.toISOString().split('T')[0]);
+
             let completedCount = 0;
             const totalCount = filtered.length;
 
@@ -224,27 +229,58 @@
                 const isChecked = userChecks[editKey] || false;
                 if(isChecked) completedCount++;
 
+                // 過去・現在・未来の判定
+                let timeStatus = 'future'; // 'past', 'current', 'future'
+                if (isToday) {
+                    if (endTime < currentHM) {
+                        timeStatus = 'past';
+                    } else if (startTime <= currentHM && currentHM <= endTime) {
+                        timeStatus = 'current';
+                    } else {
+                        timeStatus = 'future';
+                    }
+                }
+
+                // カードのスタイル分岐
+                let cardClass = "bg-white border-slate-200";
+                let textStyle = "text-slate-800";
+                let badgeStyle = "bg-slate-100 text-slate-700 border-slate-200";
+                let statusBadge = "";
+
+                if (timeStatus === 'past' || isChecked) {
+                    cardClass = "bg-slate-100/80 border-slate-200 opacity-60";
+                    textStyle = "text-slate-500 line-through";
+                    badgeStyle = "bg-slate-200 text-slate-500 border-slate-300";
+                    statusBadge = `<span class="px-2 py-0.5 text-[10px] font-bold rounded bg-slate-200 text-slate-600">終了</span>`;
+                } else if (timeStatus === 'current') {
+                    cardClass = "bg-emerald-50/90 border-emerald-400 shadow-sm ring-1 ring-emerald-400";
+                    textStyle = "text-emerald-950 font-semibold";
+                    badgeStyle = "bg-emerald-100 text-emerald-800 border-emerald-300";
+                    statusBadge = `<span class="px-2 py-0.5 text-[10px] font-bold rounded bg-emerald-600 text-white animate-pulse">進行中</span>`;
+                }
+
                 const card = document.createElement('div');
-                card.className = `bg-white p-3.5 sm:p-4 rounded-xl shadow-sm border border-slate-200 transition flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${isChecked ? 'opacity-50 bg-slate-50' : ''}`;
+                card.className = `p-3.5 sm:p-4 rounded-xl border transition flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${cardClass}`;
                 
                 card.innerHTML = `
                     <div class="flex items-start sm:items-center gap-3">
                         <input type="checkbox" ${isChecked ? 'checked' : ''} onchange="toggleCheck('${targetDate}', ${item.id}, this.checked)" class="w-5 h-5 mt-0.5 sm:mt-0 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500 cursor-pointer shrink-0">
                         <div>
                             <div class="flex items-center gap-2 mb-1 flex-wrap">
-                                <span class="px-2 py-0.5 text-[11px] font-bold rounded bg-slate-100 text-slate-700 border border-slate-200 shrink-0">${item.dept}</span>
+                                <span class="px-2 py-0.5 text-[11px] font-bold rounded border ${badgeStyle} shrink-0">${item.dept}</span>
+                                ${statusBadge}
                                 <div class="font-mono text-xs sm:text-sm font-semibold text-indigo-600 flex items-center gap-1">
-                                    <input type="text" value="${startTime}" class="bg-slate-50 border border-slate-200 rounded px-1.5 py-0.5 w-16 text-xs text-center outline-none focus:border-indigo-500 focus:bg-white" onchange="updateTime('${targetDate}', ${item.id}, 'start', this.value)">
+                                    <input type="text" value="${startTime}" class="bg-white/80 border border-slate-200 rounded px-1.5 py-0.5 w-16 text-xs text-center outline-none focus:border-indigo-500" onchange="updateTime('${targetDate}', ${item.id}, 'start', this.value)">
                                     <span class="text-slate-400">〜</span>
-                                    <input type="text" value="${endTime}" class="bg-slate-50 border border-slate-200 rounded px-1.5 py-0.5 w-16 text-xs text-center outline-none focus:border-indigo-500 focus:bg-white" onchange="updateTime('${targetDate}', ${item.id}, 'end', this.value)">
+                                    <input type="text" value="${endTime}" class="bg-white/80 border border-slate-200 rounded px-1.5 py-0.5 w-16 text-xs text-center outline-none focus:border-indigo-500" onchange="updateTime('${targetDate}', ${item.id}, 'end', this.value)">
                                 </div>
                             </div>
-                            <div class="font-medium text-slate-800 text-sm sm:text-base ${isChecked ? 'line-through' : ''}">${item.activity}</div>
+                            <div class="text-sm sm:text-base ${textStyle}">${item.activity}</div>
                             <div class="text-[11px] text-slate-400">${item.activityEn}</div>
                         </div>
                     </div>
                     <div class="text-[11px] sm:text-xs text-slate-500 sm:text-right pl-8 sm:pl-0 shrink-0">
-                        📍 <span class="bg-slate-100 px-2 py-0.5 rounded text-slate-600">${item.note}</span>
+                        📍 <span class="bg-white/60 px-2 py-0.5 rounded border border-slate-200">${item.note}</span>
                     </div>
                 `;
                 container.appendChild(card);
@@ -260,13 +296,13 @@
             const editKey = `${date}_${id}`;
             if (!userEdits[editKey]) userEdits[editKey] = {};
             userEdits[editKey][field] = value;
-            localStorage.setItem('hsc_schedule_edits_v8', JSON.stringify(userEdits));
+            localStorage.setItem('hsc_schedule_edits_v9', JSON.stringify(userEdits));
         }
 
         function toggleCheck(date, id, checked) {
             const editKey = `${date}_${id}`;
             userChecks[editKey] = checked;
-            localStorage.setItem('hsc_schedule_checks_v8', JSON.stringify(userChecks));
+            localStorage.setItem('hsc_schedule_checks_v9', JSON.stringify(userChecks));
             renderTable();
         }
 
@@ -276,6 +312,11 @@
             const minutes = String(now.getMinutes()).padStart(2, '0');
             const seconds = String(now.getSeconds()).padStart(2, '0');
             document.getElementById('live-clock').textContent = `${hours}:${minutes}:${seconds}`;
+
+            // 1分ごとに自動で再描画して過去・現在・未来の色分けを更新
+            if (seconds === '00') {
+                renderTable();
+            }
 
             const currentHM = `${hours}:${minutes}`;
             const dayItems = scheduleData[dates[currentIndex].date] || [];
@@ -357,8 +398,8 @@
 
         function resetData() {
             if(confirm('変更した時間やチェック状態をすべて初期化しますか？')) {
-                localStorage.removeItem('hsc_schedule_edits_v8');
-                localStorage.removeItem('hsc_schedule_checks_v8');
+                localStorage.removeItem('hsc_schedule_edits_v9');
+                localStorage.removeItem('hsc_schedule_checks_v9');
                 userEdits = {};
                 userChecks = {};
                 renderTable();
