@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>デイリーランシート＆バス運行管理 - 古橋廣之進浜松市総合水泳場</title>
+    <title>デイリーランシート・バス・練習スケジュール管理 - 古橋廣之進浜松市総合水泳場</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body { font-family: system-ui, -apple-system, sans-serif; }
@@ -16,7 +16,7 @@
         <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap justify-between items-center gap-3">
             <div>
                 <h1 class="text-base sm:text-xl font-bold flex items-center gap-2">
-                    HSC 運営・輸送管理
+                    HSC 大会運営管理
                     <span id="live-clock" class="text-xs font-mono bg-indigo-900 px-2 py-0.5 rounded text-indigo-200">--:--:--</span>
                 </h1>
                 <p class="text-[11px] text-indigo-200">古橋廣之進記念浜松市総合水泳場</p>
@@ -42,9 +42,10 @@
     <div class="bg-indigo-900 text-indigo-100 py-2 px-4 text-xs shadow-inner">
         <div class="max-w-7xl mx-auto flex flex-wrap justify-between items-center gap-2">
             <!-- タブ切り替え -->
-            <div class="flex items-center bg-indigo-950 p-1 rounded-lg">
-                <button onclick="switchTab('run')" id="tab-run" class="px-3 py-1 rounded text-xs font-bold bg-indigo-600 text-white transition">📋 ランシート</button>
-                <button onclick="switchTab('bus')" id="tab-bus" class="px-3 py-1 rounded text-xs font-bold text-indigo-300 hover:text-white transition">🚌 バス輸送一覧[cite: 1]</button>
+            <div class="flex items-center bg-indigo-950 p-1 rounded-lg overflow-x-auto gap-1">
+                <button onclick="switchTab('run')" id="tab-run" class="px-3 py-1 rounded text-xs font-bold bg-indigo-600 text-white transition shrink-0">📋 ランシート</button>
+                <button onclick="switchTab('bus')" id="tab-bus" class="px-3 py-1 rounded text-xs font-bold text-indigo-300 hover:text-white transition shrink-0">🚌 バス輸送[cite: 1]</button>
+                <button onclick="switchTab('training')" id="tab-training" class="px-3 py-1 rounded text-xs font-bold text-indigo-300 hover:text-white transition shrink-0">🏊‍♀️ 練習スケジュール[cite: 2, 3, 4, 5, 6]</button>
             </div>
             
             <div class="flex items-center gap-3">
@@ -82,7 +83,7 @@
 
     <!-- フッター -->
     <footer class="bg-white border-t border-slate-200 py-3 text-center text-xs text-slate-500">
-        Daily Run Sheet & Bus Schedule Viewer &copy; 2026 HSC Management Team
+        Daily Run Sheet & Operations Viewer &copy; 2026 HSC Management Team
     </footer>
 
     <script>
@@ -263,6 +264,47 @@
             ]
         };
 
+        // --- 9/24〜9/28 全日分の練習スケジュールデータ (画像より完全抽出) ---
+        const trainingData = {
+            "2026-09-24": [
+                { session: "セッション 1 (Competition Pool)", enter: "09:30", start: "10:15", end: "11:15", exit: "11:30", nocs: "🇭🇰 HKG, 🇯🇵 JPN, 🇹🇭 THA", music: "曲かけ 20:00 / 持ち時間 1:00:00" },
+                { session: "セッション 2 (Competition Pool)", enter: "11:00", start: "11:45", end: "12:41", exit: "13:00", nocs: "🇨🇳 CHN, 🇰🇿 KAZ, 🇰🇷 KOR, 🇺🇿 UZB", music: "曲かけ 20:00(CHN/KAZ) 08:00(KOR/UZB) / 0:56:00" },
+                { session: "休憩 (BREAK)", enter: "12:00", start: "-", end: "-", exit: "14:30", nocs: "プールメンテナンス", music: "-" },
+                { session: "セッション 3 (Competition Pool)", enter: "14:30", start: "15:15", end: "16:15", exit: "16:30", nocs: "🇭🇰 HKG, 🇯🇵 JPN, 🇹🇭 THA", music: "曲かけ 20:00 / 持ち時間 1:00:00" },
+                { session: "セッション 4 (Competition Pool)", enter: "16:00", start: "16:45", end: "17:41", exit: "18:00", nocs: "🇨🇳 CHN, 🇰🇿 KAZ, 🇰🇷 KOR, 🇺🇿 UZB", music: "曲かけ 20:00(CHN/KAZ) 08:00(KOR/UZB) / 0:56:00" },
+                { session: "Diving & Warm up Pool (25m)", enter: "09:30", start: "-", end: "-", exit: "18:00", nocs: "ALL (全チーム共通)", music: "自由練習 (FREE USE - NO MUSIC)" }
+            ],
+            "2026-09-25": [
+                { session: "セッション 1 (Competition Pool)", enter: "09:30", start: "10:15", end: "11:11", exit: "11:30", nocs: "🇨🇳 CHN, 🇰🇿 KAZ, 🇰🇷 KOR, 🇺🇿 UZB", music: "曲かけ 20:00(CHN/KAZ) 08:00(KOR/UZB) / 0:56:00" },
+                { session: "セッション 2 (Competition Pool)", enter: "11:00", start: "11:45", end: "12:45", exit: "13:00", nocs: "🇭🇰 HKG, 🇯🇵 JPN, 🇹🇭 THA", music: "曲かけ 20:00 / 持ち時間 1:00:00" },
+                { session: "休憩 (BREAK)", enter: "13:00", start: "-", end: "-", exit: "14:30", nocs: "プールメンテナンス", music: "-" },
+                { session: "セッション 3 (Competition Pool)", enter: "14:30", start: "15:15", end: "16:11", exit: "16:30", nocs: "🇨🇳 CHN, 🇰🇿 KAZ, 🇰🇷 KOR, 🇺🇿 UZB", music: "曲かけ 20:00(CHN/KAZ) 08:00(KOR/UZB) / 0:56:00" },
+                { session: "セッション 4 (Competition Pool)", enter: "16:00", start: "16:45", end: "17:45", exit: "18:00", nocs: "🇭🇰 HKG, 🇯🇵 JPN, 🇹🇭 THA", music: "曲かけ 20:00 / 持ち時間 1:00:00" },
+                { session: "Diving & Warm up Pool (25m)", enter: "09:30", start: "-", end: "-", exit: "18:00", nocs: "ALL (全チーム共通)", music: "自由練習 (FREE USE - NO MUSIC)" }
+            ],
+            "2026-09-26": [
+                { session: "Duet Technical Routine (Competition)", enter: "08:00", start: "09:30", end: "09:50", exit: "10:00", nocs: "出場各チーム (7組)", music: "ルーティン通し 02:20 / グループ計 0:16:20" },
+                { session: "Team Acrobatic Routine (Competition)", enter: "14:00", start: "15:30", end: "15:50", exit: "16:00", nocs: "出場各チーム (5組)", music: "ルーティン通し 03:00 / グループ計 0:15:00" },
+                { session: "Diving Pool", enter: "08:00 〜 10:00", start: "-", end: "-", exit: "10:00", nocs: "Duet (FREE USE - NO MUSIC)", music: "自由練習" },
+                { session: "Diving Pool (BREAK)", enter: "10:00", start: "-", end: "-", exit: "14:00", nocs: "メンテナンス", music: "-" },
+                { session: "Diving Pool", enter: "14:00 〜 16:00", start: "-", end: "-", exit: "16:00", nocs: "Team (FREE USE - NO MUSIC)", music: "自由練習" },
+                { session: "Warm up Pool (25m)", enter: "08:00", start: "-", end: "-", exit: "19:00", nocs: "ALL (全チーム共通)", music: "自由練習 (FREE USE - NO MUSIC)" }
+            ],
+            "2026-09-27": [
+                { session: "Duet Free Routine (Competition)", enter: "08:00", start: "09:30", end: "09:55", exit: "10:00", nocs: "出場各チーム (7組)", music: "ルーティン通し 02:45 / グループ計 0:19:15" },
+                { session: "Team Technical Routine (Competition)", enter: "14:00", start: "15:30", end: "15:50", exit: "16:00", nocs: "出場各チーム (5組)", music: "ルーティン通し 02:50 / グループ計 0:14:10" },
+                { session: "Diving Pool", enter: "08:00 〜 10:00", start: "-", end: "-", exit: "10:00", nocs: "Duet (FREE USE - NO MUSIC)", music: "自由練習" },
+                { session: "Diving Pool (BREAK)", enter: "10:00", start: "-", end: "-", exit: "14:00", nocs: "メンテナンス", music: "-" },
+                { session: "Diving Pool", enter: "14:00 〜 16:00", start: "-", end: "-", exit: "16:00", nocs: "Team (FREE USE - NO MUSIC)", music: "自由練習" },
+                { session: "Warm up Pool (25m)", enter: "08:00", start: "-", end: "-", exit: "19:00", nocs: "ALL (全チーム共通)", music: "自由練習 (FREE USE - NO MUSIC)" }
+            ],
+            "2026-09-28": [
+                { session: "Team Free Routine (Competition)", enter: "08:00", start: "09:30", end: "09:50", exit: "10:00", nocs: "出場各チーム (5組)", music: "ルーティン通し 03:30 / グループ計 0:17:30" },
+                { session: "Diving Pool", enter: "08:00", start: "-", end: "-", exit: "10:00", nocs: "Team (FREE USE - NO MUSIC)", music: "自由練習" },
+                { session: "Warm up Pool (25m)", enter: "08:00", start: "-", end: "-", exit: "13:00", nocs: "ALL (全チーム共通)", music: "自由練習 (FREE USE - NO MUSIC)" }
+            ]
+        };
+
         const dates = [
             { date: "2026-09-24", label: "9月24日 (木)" },
             { date: "2026-09-25", label: "9月25日 (金)" },
@@ -274,8 +316,8 @@
         let currentIndex = 0;
         let currentTab = 'run';
         let currentDeptFilter = 'ALL';
-        let userEdits = JSON.parse(localStorage.getItem('hsc_edits_v13') || '{}');
-        let userChecks = JSON.parse(localStorage.getItem('hsc_checks_v13') || '{}');
+        let userEdits = JSON.parse(localStorage.getItem('hsc_edits_v15') || '{}');
+        let userChecks = JSON.parse(localStorage.getItem('hsc_checks_v15') || '{}');
         let alertedTasks = new Set();
 
         function init() {
@@ -300,15 +342,21 @@
             currentTab = tab;
             const tabRun = document.getElementById('tab-run');
             const tabBus = document.getElementById('tab-bus');
+            const tabTraining = document.getElementById('tab-training');
             const filterBar = document.getElementById('filter-bar');
 
+            tabRun.className = "px-3 py-1 rounded text-xs font-bold text-indigo-300 hover:text-white transition shrink-0";
+            tabBus.className = "px-3 py-1 rounded text-xs font-bold text-indigo-300 hover:text-white transition shrink-0";
+            tabTraining.className = "px-3 py-1 rounded text-xs font-bold text-indigo-300 hover:text-white transition shrink-0";
+
             if (tab === 'run') {
-                tabRun.className = "px-3 py-1 rounded text-xs font-bold bg-indigo-600 text-white transition";
-                tabBus.className = "px-3 py-1 rounded text-xs font-bold text-indigo-300 hover:text-white transition";
+                tabRun.className = "px-3 py-1 rounded text-xs font-bold bg-indigo-600 text-white transition shrink-0";
                 filterBar.style.display = "flex";
+            } else if (tab === 'bus') {
+                tabBus.className = "px-3 py-1 rounded text-xs font-bold bg-indigo-600 text-white transition shrink-0";
+                filterBar.style.display = "none";
             } else {
-                tabBus.className = "px-3 py-1 rounded text-xs font-bold bg-indigo-600 text-white transition";
-                tabRun.className = "px-3 py-1 rounded text-xs font-bold text-indigo-300 hover:text-white transition";
+                tabTraining.className = "px-3 py-1 rounded text-xs font-bold bg-indigo-600 text-white transition shrink-0";
                 filterBar.style.display = "none";
             }
             renderView();
@@ -329,8 +377,10 @@
         function renderView() {
             if (currentTab === 'run') {
                 renderRunSheet();
-            } else {
+            } else if (currentTab === 'bus') {
                 renderBusSchedule();
+            } else {
+                renderTrainingSchedule();
             }
         }
 
@@ -388,16 +438,11 @@
                     statusBadge = `<span class="px-2 py-0.5 text-[10px] font-bold rounded bg-emerald-600 text-white animate-pulse">進行中</span>`;
                 }
 
-                // 不明・未定箇所（"-"など）の場合は自由入力テキストボックス、すでに決まっている箇所は固定表示にするロジック
                 let noteDisplayHtml = "";
                 if (item.note === "-" || item.note === "" || item.note === undefined) {
-                    // 不明な箇所は自由に入力・追記可能
                     const currentCustomNote = userEdits[editKey]?.note !== undefined ? userEdits[editKey].note : (item.note === "-" ? "" : item.note);
-                    noteDisplayHtml = `
-                        📍 <input type="text" value="${currentCustomNote}" placeholder="所属/場所を入力" class="bg-white border border-slate-300 rounded px-2 py-0.5 text-xs text-slate-700 w-28 outline-none focus:border-indigo-500" onchange="updateEdit('${editKey}', 'note', this.value)">
-                    `;
+                    noteDisplayHtml = `📍 <input type="text" value="${currentCustomNote}" placeholder="所属/場所を入力" class="bg-white border border-slate-300 rounded px-2 py-0.5 text-xs text-slate-700 w-28 outline-none focus:border-indigo-500" onchange="updateEdit('${editKey}', 'note', this.value)">`;
                 } else {
-                    // すでに決まっている箇所はそのまま表示
                     noteDisplayHtml = `📍 <span class="bg-slate-100 px-2 py-0.5 rounded border border-slate-200 text-slate-600">${item.note}</span>`;
                 }
 
@@ -491,6 +536,53 @@
             updateProgress(completedCount, totalCount);
         }
 
+        function renderTrainingSchedule() {
+            const container = document.getElementById('schedule-list-container');
+            container.innerHTML = '';
+            
+            const targetDate = dates[currentIndex].date;
+            const items = trainingData[targetDate] || [];
+
+            if(items.length === 0) {
+                container.innerHTML = `<div class="bg-white p-8 text-center text-slate-400 rounded-xl shadow-sm">この日の練習スケジュールはありません</div>`;
+                updateProgress(0, 0);
+                return;
+            }
+
+            let completedCount = 0;
+            const totalCount = items.length;
+
+            items.forEach((tr, index) => {
+                const editKey = `${targetDate}_training_${index}`;
+                const isChecked = userChecks[editKey] || false;
+                if(isChecked) completedCount++;
+
+                const card = document.createElement('div');
+                card.className = `p-4 rounded-xl border bg-white border-slate-200 transition flex flex-col gap-2 ${isChecked ? 'opacity-50 bg-slate-50' : ''}`;
+                
+                card.innerHTML = `
+                    <div class="flex items-center justify-between gap-2 flex-wrap">
+                        <div class="flex items-center gap-2">
+                            <input type="checkbox" ${isChecked ? 'checked' : ''} onchange="toggleCheck('${editKey}', this.checked)" class="w-5 h-5 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500 cursor-pointer shrink-0">
+                            <span class="px-2 py-0.5 text-xs font-bold rounded bg-cyan-100 text-cyan-800 border border-cyan-300">🏊‍♀️ ${tr.session}</span>
+                        </div>
+                        <div class="font-mono text-xs font-bold text-slate-600 bg-slate-100 px-2 py-1 rounded">
+                            入場: ${tr.enter} | 開始: ${tr.start} 〜 終了: ${tr.end} | 退場: ${tr.exit}
+                        </div>
+                    </div>
+                    <div class="text-sm font-semibold text-slate-800 pl-7">
+                        対象: ${tr.nocs}
+                    </div>
+                    <div class="text-xs text-indigo-600 font-medium pl-7 bg-indigo-50/50 p-1.5 rounded">
+                        🎵 ${tr.music}
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+
+            updateProgress(completedCount, totalCount);
+        }
+
         function updateProgress(completedCount, totalCount) {
             const percent = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
             document.getElementById('progress-text').textContent = `進捗: ${completedCount}/${totalCount} (${percent}%)`;
@@ -500,12 +592,12 @@
         function updateEdit(editKey, field, value) {
             if (!userEdits[editKey]) userEdits[editKey] = {};
             userEdits[editKey][field] = value;
-            localStorage.setItem('hsc_edits_v13', JSON.stringify(userEdits));
+            localStorage.setItem('hsc_edits_v15', JSON.stringify(userEdits));
         }
 
         function toggleCheck(editKey, checked) {
             userChecks[editKey] = checked;
-            localStorage.setItem('hsc_checks_v13', JSON.stringify(userChecks));
+            localStorage.setItem('hsc_checks_v15', JSON.stringify(userChecks));
             renderView();
         }
 
@@ -550,8 +642,8 @@
 
         function resetData() {
             if(confirm('変更した内容やチェック状態をすべて初期化しますか？')) {
-                localStorage.removeItem('hsc_edits_v13');
-                localStorage.removeItem('hsc_checks_v13');
+                localStorage.removeItem('hsc_edits_v15');
+                localStorage.removeItem('hsc_checks_v15');
                 userEdits = {};
                 userChecks = {};
                 renderView();
