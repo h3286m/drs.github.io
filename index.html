@@ -1,3 +1,5 @@
+gemini-code-1790221064474.html.txt
+100%
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -44,7 +46,7 @@
             <!-- タブ切り替え -->
             <div class="flex items-center bg-indigo-950 p-1 rounded-lg overflow-x-auto gap-1">
                 <button onclick="switchTab('run')" id="tab-run" class="px-3 py-1 rounded text-xs font-bold bg-indigo-600 text-white transition shrink-0">📋 ランシート</button>
-                <button onclick="switchTab('bus')" id="tab-bus" class="px-3 py-1 rounded text-xs font-bold text-indigo-300 hover:text-white transition shrink-0">🚌 バス輸送[cite: 1]</button>
+                <button onclick="switchTab('bus')" id="tab-bus" class="px-3 py-1 rounded text-xs font-bold text-indigo-300 hover:text-white transition shrink-0">🚌 バス輸送[cite: 1, 7]</button>
                 <button onclick="switchTab('training')" id="tab-training" class="px-3 py-1 rounded text-xs font-bold text-indigo-300 hover:text-white transition shrink-0">🏊‍♀️ 練習スケジュール[cite: 2, 3, 4, 5, 6]</button>
             </div>
             
@@ -169,102 +171,74 @@
             "2026-09-28": schedule928
         };
 
-        // --- バス輸送スケジュールデータ ---
+        // --- バス輸送スケジュールデータ (TAホテル発着タイムテーブル完全反映) ---
         const busData = {
             "2026-09-24": [
-                { id: 101, start: "09:15", end: "11:35", type: "TA", code: "TA0924SWA001", target: "選手" },
-                { id: 102, start: "10:15", end: "11:20", type: "TA", code: "TA0924SWA002", target: "選手" },
-                { id: 103, start: "10:45", end: "12:20", type: "TA", code: "TA0924SWA003", target: "選手" },
-                { id: 104, start: "12:00", end: "12:50", type: "TA", code: "TA0924SWA004", target: "選手" },
-                { id: 105, start: "13:00", end: "14:05", type: "TA", code: "TA0924SWA005", target: "選手" },
-                { id: 106, start: "14:20", end: "15:05", type: "TA", code: "TA0924SWA003", target: "選手" },
-                { id: 107, start: "14:30", end: "15:00", type: "TA", code: "TA0924SWA001", target: "選手" },
-                { id: 108, start: "14:50", end: "16:05", type: "TA", code: "TA0924SWA004", target: "選手" },
-                { id: 109, start: "16:00", end: "18:05", type: "TA", code: "TA0924SWA006", target: "選手" },
-                { id: 110, start: "16:05", end: "17:05", type: "TA", code: "TA0924SWA005", target: "選手" },
+                { id: 101, start: "08:15", end: "11:35", type: "TA", code: "TA0924SWA001", target: "選手 (ホテル発08:15 / TOBIo発11:35)" },
+                { id: 102, start: "09:15", end: "11:20", type: "TA", code: "TA0924SWA002", target: "選手 (ホテル発09:15 / TOBIo発11:20)" },
+                { id: 103, start: "09:45", end: "12:20", type: "TA", code: "TA0924SWA003", target: "選手 (ホテル発09:45 / TOBIo発12:20)" },
+                { id: 104, start: "11:00", end: "12:50", type: "TA", code: "TA0924SWA004", target: "選手 (ホテル発11:00 / TOBIo発12:50)" },
+                { id: 105, start: "12:00", end: "13:15", type: "TA", code: "TA0924SWA005", target: "選手 (ホテル発12:00 / TOBIo発13:15)" },
+                { id: 106, start: "13:30", end: "14:15", type: "TA", code: "TA0924SWA003", target: "選手 (ホテル発13:30 / TOBIo発14:15)" },
+                { id: 107, start: "14:15", end: "15:15", type: "TA", code: "TA0924SWA001", target: "選手 (ホテル発14:15 / TOBIo発15:15)" },
+                { id: 108, start: "14:45", end: "16:15", type: "TA", code: "TA0924SWA004", target: "選手 (ホテル発14:45 / TOBIo発16:15)" },
+                { id: 109, start: "16:00", end: "17:15", type: "TA", code: "TA0924SWA006", target: "選手 (ホテル発16:00 / TOBIo発17:15)" },
+                { id: 110, start: "16:45", end: "18:15", type: "TA", code: "TA0924SWA005", target: "選手 (ホテル発16:45 / TOBIo発18:15)" },
                 { id: 111, start: "19:10", end: "20:00", type: "TW", code: "TFTMTW0924SWAW04", target: "スタッフ/職員" },
                 { id: 112, start: "19:15", end: "20:10", type: "TF", code: "TFTMTW0924SWAF04", target: "審判等" }
             ],
             "2026-09-25": [
-                { id: 201, start: "09:15", end: "11:35", type: "TA", code: "TA0925SWA001", target: "選手" },
-                { id: 202, start: "09:45", end: "11:25", type: "TF", code: "TFTMTW0925SWAF04", target: "審判等" },
-                { id: 203, start: "10:15", end: "11:20", type: "TA", code: "TA0925SWA002", target: "選手" },
-                { id: 204, start: "10:45", end: "12:20", type: "TA", code: "TA0925SWA003", target: "選手" },
-                { id: 205, start: "12:00", end: "12:50", type: "TA", code: "TA0925SWA004", target: "選手" },
-                { id: 206, start: "13:00", end: "14:05", type: "TA", code: "TA0925SWA005", target: "選手" },
+                { id: 201, start: "08:15", end: "11:30", type: "TA", code: "TA0925SWA001", target: "選手 (ホテル発08:15 / TOBIo発11:30)" },
+                { id: 202, start: "09:15", end: "11:45", type: "TF", code: "TFTMTW0925SWAF04", target: "審判等 (ホテル発09:15 / TOBIo発11:45)" },
+                { id: 203, start: "09:45", end: "12:30", type: "TA", code: "TA0925SWA002", target: "選手 (ホテル発09:45 / TOBIo発12:30)" },
+                { id: 204, start: "11:00", end: "13:00", type: "TA", code: "TA0925SWA003", target: "選手 (ホテル発11:00 / TOBIo発13:00)" },
+                { id: 205, start: "12:00", end: "13:15", type: "TA", code: "TA0925SWA004", target: "選手 (ホテル発12:00 / TOBIo発13:15)" },
+                { id: 206, start: "13:30", end: "14:15", type: "TA", code: "TA0925SWA005", target: "選手 (ホテル発13:30 / TOBIo発14:15)" },
                 { id: 207, start: "13:00", end: "18:25", type: "TF", code: "TFTMTW0925SWAF02", target: "審判等" },
-                { id: 208, start: "14:20", end: "15:05", type: "TA", code: "TA0925SWA003", target: "選手" },
-                { id: 209, start: "14:30", end: "15:00", type: "TA", code: "TA0925SWA001", target: "選手" },
-                { id: 210, start: "14:50", end: "16:05", type: "TA", code: "TA0925SWA004", target: "選手" },
-                { id: 211, start: "15:00", end: "19:25", type: "TF", code: "TFTMTW0925SWAF05", target: "審判等" },
-                { id: 212, start: "16:00", end: "18:05", type: "TA", code: "TA0925SWA006", target: "選手" },
-                { id: 213, start: "16:05", end: "17:05", type: "TA", code: "TA0925SWA005", target: "選手" },
-                { id: 214, start: "18:45", end: "20:00", type: "TW", code: "TFTMTW0925SWAW05", target: "スタッフ/職員" },
-                { id: 215, start: "19:10", end: "20:00", type: "TW", code: "TFTMTW0925SWAW04", target: "スタッフ/職員" },
-                { id: 216, start: "19:45", end: "20:10", type: "TF", code: "TFTMTW0925SWAF02", target: "審判等" }
+                { id: 208, start: "14:15", end: "15:15", type: "TA", code: "TA0925SWA003", target: "選手 (ホテル発14:15 / TOBIo発15:15)" },
+                { id: 209, start: "15:00", end: "16:15", type: "TA", code: "TA0925SWA001", target: "選手 (ホテル発15:00 / TOBIo発16:15)" },
+                { id: 210, start: "16:00", end: "17:15", type: "TA", code: "TA0925SWA004", target: "選手 (ホテル発16:00 / TOBIo発17:15)" },
+                { id: 211, start: "17:00", end: "18:15", type: "TF", code: "TFTMTW0925SWAF05", target: "審判等 (ホテル発17:00 / TOBIo発18:15)" },
+                { id: 212, start: "16:05", end: "17:05", type: "TA", code: "TA0925SWA006", target: "選手" },
+                { id: 213, start: "18:45", end: "20:00", type: "TW", code: "TFTMTW0925SWAW05", target: "スタッフ/職員" },
+                { id: 214, start: "19:10", end: "20:00", type: "TW", code: "TFTMTW0925SWAW04", target: "スタッフ/職員" }
             ],
             "2026-09-26": [
-                { id: 301, start: "06:30", end: "09:00", type: "TF/TW", code: "TFTMTW0926SWAM01", target: "審判/スタッフ" },
-                { id: 302, start: "08:50", end: "14:00", type: "TW", code: "TFTMTW0926SWAW03", target: "スタッフ/職員" },
-                { id: 303, start: "08:50", end: "14:55", type: "TW", code: "TFTMTW0926SWAW02", target: "スタッフ/職員" },
-                { id: 304, start: "09:00", end: "13:55", type: "TF", code: "TFTMTW0926SWAF05", target: "審判等" },
-                { id: 305, start: "09:15", end: "10:15", type: "TA", code: "TA0926SWA003", target: "選手" },
-                { id: 306, start: "09:15", end: "12:55", type: "TF", code: "TFTMTW0926SWAF03", target: "審判等" },
-                { id: 307, start: "09:45", end: "12:25", type: "TF", code: "TFTMTW0926SWAF01", target: "審判等" },
-                { id: 308, start: "10:15", end: "10:35", type: "TA", code: "TA0926SWA005", target: "選手" },
-                { id: 309, start: "11:15", end: "12:35", type: "TA", code: "TA0926SWA007", target: "選手" },
-                { id: 310, start: "13:15", end: "13:35", type: "TA", code: "TA0926SWA002", target: "選手" },
-                { id: 311, start: "14:15", end: "14:35", type: "TA", code: "TA0926SWA006", target: "選手" },
-                { id: 312, start: "15:15", end: "16:35", type: "TA", code: "TA0926SWA005", target: "選手" },
-                { id: 313, start: "16:00", end: "19:55", type: "TF", code: "TFTMTW0926SWAM03", target: "審判等" },
-                { id: 314, start: "16:15", end: "18:05", type: "TA", code: "TA0926SWA002", target: "選手" },
-                { id: 315, start: "16:35", end: "18:35", type: "TA", code: "TA0926SWA006", target: "選手" },
-                { id: 316, start: "17:15", end: "17:35", type: "TA", code: "TA0926SWA007", target: "選手" },
-                { id: 317, start: "18:15", end: "19:05", type: "TA", code: "TA0926SWA004", target: "選手" },
-                { id: 318, start: "19:00", end: "20:25", type: "TW", code: "TFTMTW0926SWAW01", target: "スタッフ/職員" },
-                { id: 319, start: "19:55", end: "20:00", type: "TF", code: "TFTMTW0926SWAM04", target: "審判等" },
-                { id: 320, start: "20:25", end: "22:00", type: "TW", code: "TFTMTW0926SWAW01", target: "スタッフ/職員" },
-                { id: 321, start: "20:55", end: "22:00", type: "TF", code: "TFTMTW0926SWAM04", target: "審判等" }
+                { id: 301, start: "07:15", end: "10:45", type: "TA", code: "TA0926SWA001", target: "選手 (ホテル発07:15 / TOBIo発10:45)" },
+                { id: 302, start: "08:15", end: "11:45", type: "TA", code: "TA0926SWA002", target: "選手 (ホテル発08:15 / TOBIo発11:45)" },
+                { id: 303, start: "09:15", end: "12:45", type: "TA", code: "TA0926SWA003", target: "選手 (ホテル発09:15 / TOBIo発12:45)" },
+                { id: 304, start: "10:15", end: "13:45", type: "TA", code: "TA0926SWA004", target: "選手 (ホテル発10:15 / TOBIo発13:45)" },
+                { id: 305, start: "11:15", end: "14:45", type: "TA", code: "TA0926SWA005", target: "選手 (ホテル発11:15 / TOBIo発14:45)" },
+                { id: 306, start: "12:15", end: "15:45", type: "TA", code: "TA0926SWA006", target: "選手 (ホテル発12:15 / TOBIo発15:45)" },
+                { id: 307, start: "13:15", end: "16:45", type: "TA", code: "TA0926SWA007", target: "選手 (ホテル発13:15 / TOBIo発16:45)" },
+                { id: 308, start: "14:15", end: "17:45", type: "TA", code: "TA0926SWA008", target: "選手 (ホテル発14:15 / TOBIo発17:45)" },
+                { id: 309, start: "15:15", end: "18:45", type: "TA", code: "TA0926SWA009", target: "選手 (ホテル発15:15 / TOBIo発18:45)" },
+                { id: 310, start: "16:15", end: "19:45", type: "TA", code: "TA0926SWA010", target: "選手 (ホテル発16:15 / TOBIo発19:45)" },
+                { id: 311, start: "17:15", end: "19:15", type: "TF", code: "TFTMTW0926SWAF01", target: "審判等 (ホテル発17:15 / TOBIo発19:15)" }
             ],
             "2026-09-27": [
-                { id: 401, start: "07:30", end: "08:25", type: "TF", code: "TFTMTW0927SWAF01", target: "審判等" },
-                { id: 402, start: "07:40", end: "13:25", type: "TF", code: "TFTMTW0927SWAF03", target: "審判等" },
-                { id: 403, start: "09:15", end: "14:25", type: "TF", code: "TFTMTW0927SWAF05", target: "審判等" },
-                { id: 404, start: "09:15", end: "10:15", type: "TA", code: "TA0927SWA003", target: "選手" },
-                { id: 405, start: "09:45", end: "12:25", type: "TF", code: "TFTMTW0927SWAF01", target: "審判等" },
-                { id: 406, start: "10:00", end: "14:05", type: "TF", code: "TFTMTW0927SWAM01", target: "審判等" },
-                { id: 407, start: "10:15", end: "10:35", type: "TA", code: "TA0927SWA005", target: "選手" },
-                { id: 408, start: "11:15", end: "12:35", type: "TA", code: "TA0927SWA007", target: "選手" },
-                { id: 409, start: "13:15", end: "13:35", type: "TA", code: "TA0927SWA002", target: "選手" },
-                { id: 410, start: "14:15", end: "14:35", type: "TA", code: "TA0927SWA006", target: "選手" },
-                { id: 411, start: "15:15", end: "16:35", type: "TA", code: "TA0927SWA005", target: "選手" },
-                { id: 412, start: "15:25", end: "18:00", type: "TF", code: "TFTMTW0927SWAF04", target: "審判等" },
-                { id: 413, start: "16:15", end: "18:05", type: "TA", code: "TA0927SWA002", target: "選手" },
-                { id: 414, start: "16:25", end: "20:55", type: "TF", code: "TFTMTW0927SWAM02", target: "審判等" },
-                { id: 415, start: "16:35", end: "18:35", type: "TA", code: "TA0927SWA006", target: "選手" },
-                { id: 416, start: "17:15", end: "17:35", type: "TA", code: "TA0927SWA007", target: "選手" },
-                { id: 417, start: "18:15", end: "19:05", type: "TA", code: "TA0927SWA004", target: "選手" },
-                { id: 418, start: "19:00", end: "19:10", type: "TF", code: "TFTMTW0927SWAF04", target: "審判等" },
-                { id: 419, start: "19:55", end: "20:00", type: "TF", code: "TFTMTW0927SWAM03", target: "審判等" },
-                { id: 420, start: "20:30", end: "22:00", type: "TF", code: "TFTMTW0927SWAF04", target: "審判等" },
-                { id: 421, start: "20:55", end: "22:00", type: "TW", code: "TFTMTW0927SWAW04", target: "スタッフ/職員" }
+                { id: 401, start: "07:15", end: "10:45", type: "TA", code: "TA0927SWA001", target: "選手 (ホテル発07:15 / TOBIo発10:45)" },
+                { id: 402, start: "08:15", end: "11:45", type: "TA", code: "TA0927SWA002", target: "選手 (ホテル発08:15 / TOBIo発11:45)" },
+                { id: 403, start: "09:15", end: "12:45", type: "TA", code: "TA0927SWA003", target: "選手 (ホテル発09:15 / TOBIo発12:45)" },
+                { id: 404, start: "10:15", end: "13:45", type: "TA", code: "TA0927SWA004", target: "選手 (ホテル発10:15 / TOBIo発13:45)" },
+                { id: 405, start: "11:15", end: "14:45", type: "TA", code: "TA0927SWA005", target: "選手 (ホテル発11:15 / TOBIo発14:45)" },
+                { id: 406, start: "12:15", end: "15:45", type: "TA", code: "TA0927SWA006", target: "選手 (ホテル発12:15 / TOBIo発15:45)" },
+                { id: 407, start: "13:15", end: "16:45", type: "TA", code: "TA0927SWA007", target: "選手 (ホテル発13:15 / TOBIo発16:45)" },
+                { id: 408, start: "14:15", end: "17:45", type: "TA", code: "TA0927SWA008", target: "選手 (ホテル発14:15 / TOBIo発17:45)" },
+                { id: 409, start: "15:15", end: "18:45", type: "TA", code: "TA0927SWA009", target: "選手 (ホテル発15:15 / TOBIo発18:45)" },
+                { id: 410, start: "16:15", end: "19:45", type: "TA", code: "TA0927SWA010", target: "選手 (ホテル発16:15 / TOBIo発19:45)" },
+                { id: 411, start: "17:15", end: "19:15", type: "TF", code: "TFTMTW0927SWAF01", target: "審判等 (ホテル発17:15 / TOBIo発19:15)" }
             ],
             "2026-09-28": [
-                { id: 501, start: "07:40", end: "08:40", type: "TF", code: "TFTMTW0928SWAM02", target: "審判等" },
-                { id: 502, start: "08:15", end: "11:50", type: "TA", code: "TA0928SWA001", target: "選手" },
-                { id: 503, start: "09:00", end: "14:25", type: "TF", code: "TFTMTW0928SWAM01", target: "審判等" },
-                { id: 504, start: "09:15", end: "12:40", type: "TF", code: "TFTMTW0928SWAF01", target: "審判等" },
-                { id: 505, start: "09:15", end: "12:50", type: "TA", code: "TA0928SWA002", target: "選手" },
-                { id: 506, start: "10:00", end: "13:25", type: "TF", code: "TFTMTW0928SWAM02", target: "審判等" },
-                { id: 507, start: "10:15", end: "13:50", type: "TA", code: "TA0928SWA003", target: "選手" },
-                { id: 508, start: "11:15", end: "14:20", type: "TA", code: "TA0928SWA004", target: "選手" },
-                { id: 509, start: "14:00", end: "14:25", type: "TF", code: "TFTMTW0928SWAF01", target: "審判等" },
-                { id: 510, start: "14:35", end: "15:25", type: "TF", code: "TFTMTW0928SWAM02", target: "審判等" },
-                { id: 511, start: "17:20", end: "17:30", type: "TW", code: "TFTMTW0928SWAW03", target: "スタッフ/職員" }
+                { id: 501, start: "07:15", end: "12:00", type: "TA", code: "TA0928SWA001", target: "選手 (ホテル発07:15 / TOBIo発12:00)" },
+                { id: 502, start: "08:15", end: "13:00", type: "TA", code: "TA0928SWA002", target: "選手 (ホテル発08:15 / TOBIo発13:00)" },
+                { id: 503, start: "09:15", end: "13:30", type: "TA", code: "TA0928SWA003", target: "選手 (ホテル発09:15 / TOBIo発13:30)" },
+                { id: 504, start: "10:15", end: "14:00", type: "TA", code: "TA0928SWA004", target: "選手 (ホテル発10:15 / TOBIo発14:00)" },
+                { id: 505, start: "-", end: "14:30", type: "TA", code: "TA0928SWA005", target: "選手 (TOBIo発14:30)" }
             ]
         };
 
-        // --- 9/24〜9/28 全日分の練習スケジュールデータ (画像より完全抽出) ---
+        // --- 練習スケジュールデータ ---
         const trainingData = {
             "2026-09-24": [
                 { session: "セッション 1 (Competition Pool)", enter: "09:30", start: "10:15", end: "11:15", exit: "11:30", nocs: "🇭🇰 HKG, 🇯🇵 JPN, 🇹🇭 THA", music: "曲かけ 20:00 / 持ち時間 1:00:00" },
@@ -316,8 +290,8 @@
         let currentIndex = 0;
         let currentTab = 'run';
         let currentDeptFilter = 'ALL';
-        let userEdits = JSON.parse(localStorage.getItem('hsc_edits_v15') || '{}');
-        let userChecks = JSON.parse(localStorage.getItem('hsc_checks_v15') || '{}');
+        let userEdits = JSON.parse(localStorage.getItem('hsc_edits_v16') || '{}');
+        let userChecks = JSON.parse(localStorage.getItem('hsc_checks_v16') || '{}');
         let alertedTasks = new Set();
 
         function init() {
@@ -522,9 +496,9 @@
                                 <span class="font-mono text-[11px] text-slate-600 bg-slate-100 px-1.5 py-0.5 rounded font-semibold">${countryName || bus.code}</span>
                                 <div class="font-mono text-xs sm:text-sm font-semibold text-indigo-600 flex items-center gap-1">
                                     <input type="text" value="${startTime}" class="bg-white border border-slate-200 rounded px-1.5 py-0.5 w-16 text-xs text-center outline-none focus:border-indigo-500" onchange="updateEdit('${editKey}', 'start', this.value)">
-                                    <span class="text-slate-400">着 〜</span>
+                                    <span class="text-slate-400">ホテル発 〜</span>
                                     <input type="text" value="${endTime}" class="bg-white border border-slate-200 rounded px-1.5 py-0.5 w-16 text-xs text-center outline-none focus:border-indigo-500" onchange="updateEdit('${editKey}', 'end', this.value)">
-                                    <span class="text-slate-400">発</span>
+                                    <span class="text-slate-400">TOBIo発</span>
                                 </div>
                             </div>
                         </div>
@@ -592,12 +566,12 @@
         function updateEdit(editKey, field, value) {
             if (!userEdits[editKey]) userEdits[editKey] = {};
             userEdits[editKey][field] = value;
-            localStorage.setItem('hsc_edits_v15', JSON.stringify(userEdits));
+            localStorage.setItem('hsc_edits_v16', JSON.stringify(userEdits));
         }
 
         function toggleCheck(editKey, checked) {
             userChecks[editKey] = checked;
-            localStorage.setItem('hsc_checks_v15', JSON.stringify(userChecks));
+            localStorage.setItem('hsc_checks_v16', JSON.stringify(userChecks));
             renderView();
         }
 
@@ -642,8 +616,8 @@
 
         function resetData() {
             if(confirm('変更した内容やチェック状態をすべて初期化しますか？')) {
-                localStorage.removeItem('hsc_edits_v15');
-                localStorage.removeItem('hsc_checks_v15');
+                localStorage.removeItem('hsc_edits_v16');
+                localStorage.removeItem('hsc_checks_v16');
                 userEdits = {};
                 userChecks = {};
                 renderView();
