@@ -25,7 +25,7 @@
             <!-- 日付切り替え (< ＞) -->
             <div class="flex items-center bg-indigo-800 rounded-lg p-1 shadow-inner">
                 <button onclick="changeDay(-1)" class="px-2.5 py-1 bg-indigo-600 hover:bg-indigo-500 rounded text-xs sm:text-sm font-bold transition">◀</button>
-                <span id="current-date-label" class="px-3 font-semibold text-sm sm:text-lg min-w-[120px] text-center">9月24日 (木)</span>
+                <span id="current-date-label" class="px-4 font-semibold text-sm sm:text-lg min-w-[120px] text-center">9月24日 (木)</span>
                 <button onclick="changeDay(1)" class="px-2.5 py-1 bg-indigo-600 hover:bg-indigo-500 rounded text-xs sm:text-sm font-bold transition">▶</button>
             </div>
 
@@ -169,7 +169,7 @@
             "2026-09-28": schedule928
         };
 
-        // --- バス輸送スケジュールデータ (TAホテル発着タイムテーブル完全反映) ---
+        // --- バス輸送スケジュールデータ (9/28に13:30発→14:30着を追加) ---
         const busData = {
             "2026-09-24": [
                 { id: 101, start: "08:15", end: "11:35", type: "TA", code: "TA0924SWA001", target: "選手 (ホテル発08:15 / TOBIo発11:35)" },
@@ -232,7 +232,8 @@
                 { id: 502, start: "08:15", end: "13:00", type: "TA", code: "TA0928SWA002", target: "選手 (ホテル発08:15 / TOBIo発13:00)" },
                 { id: 503, start: "09:15", end: "13:30", type: "TA", code: "TA0928SWA003", target: "選手 (ホテル発09:15 / TOBIo発13:30)" },
                 { id: 504, start: "10:15", end: "14:00", type: "TA", code: "TA0928SWA004", target: "選手 (ホテル発10:15 / TOBIo発14:00)" },
-                { id: 505, start: "-", end: "14:30", type: "TA", code: "TA0928SWA005", target: "選手 (TOBIo発14:30)" }
+                { id: 505, start: "13:30", end: "14:30", type: "TA", code: "TA0928SWA006", target: "選手 (TOBIo発13:30 / ホテル着14:30 ※追加便)" },
+                { id: 506, start: "-", end: "14:30", type: "TA", code: "TA0928SWA005", target: "選手 (TOBIo発14:30)" }
             ]
         };
 
@@ -288,8 +289,8 @@
         let currentIndex = 0;
         let currentTab = 'run';
         let currentDeptFilter = 'ALL';
-        let userEdits = JSON.parse(localStorage.getItem('hsc_edits_v16') || '{}');
-        let userChecks = JSON.parse(localStorage.getItem('hsc_checks_v16') || '{}');
+        let userEdits = JSON.parse(localStorage.getItem('hsc_edits_v17') || '{}');
+        let userChecks = JSON.parse(localStorage.getItem('hsc_checks_v17') || '{}');
         let alertedTasks = new Set();
 
         function init() {
@@ -564,12 +565,12 @@
         function updateEdit(editKey, field, value) {
             if (!userEdits[editKey]) userEdits[editKey] = {};
             userEdits[editKey][field] = value;
-            localStorage.setItem('hsc_edits_v16', JSON.stringify(userEdits));
+            localStorage.setItem('hsc_edits_v17', JSON.stringify(userEdits));
         }
 
         function toggleCheck(editKey, checked) {
             userChecks[editKey] = checked;
-            localStorage.setItem('hsc_checks_v16', JSON.stringify(userChecks));
+            localStorage.setItem('hsc_checks_v17', JSON.stringify(userChecks));
             renderView();
         }
 
@@ -614,8 +615,8 @@
 
         function resetData() {
             if(confirm('変更した内容やチェック状態をすべて初期化しますか？')) {
-                localStorage.removeItem('hsc_edits_v16');
-                localStorage.removeItem('hsc_checks_v16');
+                localStorage.removeItem('hsc_edits_v17');
+                localStorage.removeItem('hsc_checks_v17');
                 userEdits = {};
                 userChecks = {};
                 renderView();
